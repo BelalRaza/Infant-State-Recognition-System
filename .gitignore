@@ -1,0 +1,44 @@
+# ── Python ──────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual environments ───────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Jupyter ────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Data (too large for git) ───────────────────────────────────────────
+data/raw/**
+data/processed/*
+!data/raw/*/
+!data/raw/**/.gitkeep
+!data/processed/.gitkeep
+
+# ── Model artefacts ────────────────────────────────────────────────────
+models/*.pkl
+models/*.joblib
+
+# ── Feature caches ─────────────────────────────────────────────────────
+features/*.npy
+features/*.npz
+
+# ── OS junk ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Misc ───────────────────────────────────────────────────────────────
+*.log
