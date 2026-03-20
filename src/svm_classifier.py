@@ -4,6 +4,11 @@ svm_classifier.py — Support Vector Machine classifier for infant cry audio.
 Uses an RBF-kernel SVM with grid-searched hyper-parameters (C, gamma).
 Feature scaling is handled internally via a pipeline so that the caller
 only needs to pass raw feature matrices.
+
+Layer 2 imbalance handling: ``class_weight='balanced'`` tells the SVM to
+scale the penalty parameter C inversely proportional to class frequency,
+so minority-class errors cost more.  This works together with the audio
+augmentation layer (Layer 1) to handle residual imbalance.
 """
 
 import numpy as np
@@ -45,6 +50,7 @@ class SVMClassifier:
                 C=C,
                 gamma=gamma,
                 kernel=kernel,
+                class_weight="balanced",
                 random_state=random_state,
                 decision_function_shape="ovr",
                 probability=True,

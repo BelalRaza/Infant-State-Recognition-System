@@ -144,8 +144,8 @@ approaches will be explored in Phase~2 of this project.
 The dataset comprises short audio recordings of infant cries organised
 into five classes: \textit{hunger}, \textit{belly\_pain},
 \textit{burping}, \textit{discomfort}, and \textit{tiredness}.  Each
-clip is resampled to 22\,050\,Hz and padded or truncated to a fixed
-duration of 4~seconds (88\,200 samples).
+clip is loaded at its native sampling rate of 8\,000\,Hz and padded or
+truncated to a fixed duration of 7~seconds (56\,000 samples).
 
 \subsection{Feature Extraction}
 \label{sec:features}
@@ -153,8 +153,9 @@ duration of 4~seconds (88\,200 samples).
 For each clip we extract the following features:
 
 \begin{enumerate}[nosep]
-  \item \textbf{MFCC summary} — 40 MFCCs computed with a 2048-sample
-        FFT window and 512-sample hop.  Each coefficient's time series
+  \item \textbf{MFCC summary} — 40 MFCCs computed with a 512-sample
+        FFT window ($\approx$64\,ms at 8\,kHz) and 160-sample hop
+        ($\approx$20\,ms).  Each coefficient's time series
         is summarised by six statistics: mean, standard deviation,
         minimum, maximum, skewness, and kurtosis.
         Dimensionality: $40 \times 6 = 240$.

@@ -71,9 +71,9 @@ extracted from infant cry recordings.
 
 | Step | Detail |
 |------|--------|
-| Resampling | All clips resampled to 22 050 Hz |
-| Duration normalisation | Pad or truncate every clip to 4 s |
-| MFCC extraction | 40 coefficients, FFT window = 2 048, hop = 512 |
+| Resampling | All clips loaded at native 8 000 Hz (no upsampling) |
+| Duration normalisation | Pad or truncate every clip to 7 s (56 000 samples) |
+| MFCC extraction | 40 coefficients, FFT window = 512, hop = 160 (~20 ms / ~64 ms at 8 kHz) |
 | Statistical aggregation | Mean, std, min, max, skew, kurtosis per coefficient |
 | Supplementary features | Zero-crossing rate, spectral centroid, spectral bandwidth, RMS energy |
 

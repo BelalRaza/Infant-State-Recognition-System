@@ -21,15 +21,15 @@ REPORT_DIR = ROOT_DIR / "report"
 NOTEBOOKS_DIR = ROOT_DIR / "notebooks"
 
 # ── Audio parameters ───────────────────────────────────────────────────
-SAMPLE_RATE = 22050          # Hz — librosa default; sufficient for cry analysis
-DURATION = 4                 # seconds — clips are padded or truncated to this
-N_SAMPLES = SAMPLE_RATE * DURATION   # total samples per clip (88 200)
+SAMPLE_RATE = 8000           # Hz — native rate of the dataset (no upsampling)
+DURATION = 7                 # seconds — clips are padded or truncated to this
+N_SAMPLES = SAMPLE_RATE * DURATION   # total samples per clip (56 000)
 
 # ── Feature-extraction parameters ──────────────────────────────────────
 N_MFCC = 40                 # number of Mel-frequency cepstral coefficients
-HOP_LENGTH = 512             # STFT hop in samples
-N_FFT = 2048                 # FFT window size in samples
-N_MELS = 128                 # Mel filter-bank size (used internally by librosa)
+HOP_LENGTH = 160             # STFT hop in samples (~20 ms at 8 kHz)
+N_FFT = 512                  # FFT window size in samples (~64 ms at 8 kHz)
+N_MELS = 64                  # Mel filter-bank size (appropriate for 4 kHz Nyquist)
 
 # ── Class labels ───────────────────────────────────────────────────────
 CLASSES = [
