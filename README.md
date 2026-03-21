@@ -123,9 +123,9 @@ models.
 
 | Model | Accuracy | Macro F1 | Weighted F1 | Notes |
 |-------|----------|----------|-------------|-------|
-| GMM   |          |          |             |       |
-| SVM   |          |          |             |       |
-| HMM   |          |          |             |       |
+| GMM   | 0.652    | 0.590    | 0.665       | 4 components, diag covariance, class-weighted log-priors |
+| SVM   | 0.837    | 0.249    | 0.780       | RBF kernel, grid-searched C/γ, balanced class weights |
+| HMM   | 0.348    | 0.393    | 0.353       | 5 hidden states, exploratory / bonus model |
 
 ---
 
