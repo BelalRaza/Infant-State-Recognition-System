@@ -431,9 +431,9 @@ time.
     \textbf{Model} & \textbf{Accuracy} & \textbf{Macro-F1} &
       \textbf{Inference (ms)} \\
     \midrule
-    GMM (4 comp.) & [FILL] & [FILL] & [FILL] \\
-    SVM (RBF)     & [FILL] & [FILL] & [FILL] \\
-    HMM (5 st.)   & [FILL] & [FILL] & [FILL] \\
+    GMM (4 comp.) & 0.652 & 0.590 & --- \\
+    SVM (RBF)     & 0.837 & 0.249 & --- \\
+    HMM (5 st.)   & 0.348 & 0.393 & --- \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -443,19 +443,15 @@ and SVM classifiers.
 
 \begin{figure}[t]
   \centering
-  % NOTE: replace with actual confusion matrix PNGs once generated
-  % \begin{subfigure}[b]{0.48\columnwidth}
-  %   \includegraphics[width=\textwidth]{../results/plots/gmm_confusion_matrix.png}
-  %   \caption{GMM}
-  % \end{subfigure}
-  % \hfill
-  % \begin{subfigure}[b]{0.48\columnwidth}
-  %   \includegraphics[width=\textwidth]{../results/plots/svm_confusion_matrix.png}
-  %   \caption{SVM}
-  % \end{subfigure}
-  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{1.5cm}%
-    Confusion matrix figures to be inserted after\\
-    model evaluation is complete.\vspace{1.5cm}}}
+  \begin{subfigure}[b]{0.48\columnwidth}
+    \includegraphics[width=\textwidth]{../results/plots/GMM_confusion_matrix.png}
+    \caption{GMM}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\columnwidth}
+    \includegraphics[width=\textwidth]{../results/plots/SVM_confusion_matrix.png}
+    \caption{SVM}
+  \end{subfigure}
   \caption{Normalised confusion matrices for the GMM and SVM classifiers
            on the Phase~1 test set.}
   \label{fig:confusion}
