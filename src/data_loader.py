@@ -359,13 +359,23 @@ def load_dataset(
     sr: int = SAMPLE_RATE,
     duration: float = DURATION,
     classes: list = None,
-) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    return_list: bool = False,
+) -> tuple[np.ndarray, np.ndarray, list[str]] | tuple[list[dict], list[str]]:
     """Load entire dataset and return (X, y, file_paths) arrays.
 
     This is the backward-compatible wrapper used by run_pipeline.py.
+
+    Parameters
+    ----------
+    return_list : bool
+        If True, return (dataset_list, class_names) instead of numpy
+        arrays.  This is used by standalone model scripts that feed the
+        list directly into ``FeatureExtractor.extract_and_save_dataset()``.
     """
     loader = InfantCryLoader(sr=sr, duration=duration, classes=classes)
     dataset = loader.load_dataset(data_dir)
+    if return_list:
+        return dataset, loader.classes
     return loader.to_arrays(dataset)
 
 

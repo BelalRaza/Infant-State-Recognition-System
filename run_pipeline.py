@@ -103,6 +103,14 @@ def main() -> None:
     )
     print(f"Clip-level feature shape: {clip_features.shape}")
 
+    # Persist the FULL (post-augmentation) feature matrix so that the
+    # standalone model scripts (model_a_gmm.py, model_a_svm.py) pick up
+    # augmented data when they load features/X.npy.
+    FEATURES_DIR.mkdir(parents=True, exist_ok=True)
+    np.save(FEATURES_DIR / "X.npy", clip_features)
+    np.save(FEATURES_DIR / "y.npy", y)
+    print(f"  Cached full features → {FEATURES_DIR}/X.npy  ({clip_features.shape})")
+
     # ── 3. Train / test split ──────────────────────────────────────────
     print("\n[3/6] Splitting data (test_size={:.0%}) …".format(TEST_SIZE))
 
