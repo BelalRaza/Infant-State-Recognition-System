@@ -2,36 +2,31 @@
 feature_extractor.py — Feature extraction for infant cry classification.
 
 This module provides the ``FeatureExtractor`` class, which produces a
-**246-dimensional** feature vector per audio clip:
+**411-dimensional** feature vector per audio clip:
 
-    40 MFCCs  x 2 stats (mean, std)        = 80
-    40 Deltas x 2 stats                     = 80
-    40 Delta-deltas x 2 stats               = 80
+    40 MFCCs  x 2 stats (mean, std)        = 80  \
+    40 Deltas x 2 stats                     = 80   } 240 MFCC block
+    40 Delta-deltas x 2 stats               = 80  /
+    20 CQCCs x 2 stats (mean, std)          = 40  \
+    20 Delta-CQCCs x 2 stats                = 40   } 120 CQCC block
+    20 Delta2-CQCCs x 2 stats               = 40  /
+    7 F0 / pitch contour features           =  7
+    7 spectral contrast bands x 2 stats     = 14
+    12 chroma bins x 2 stats                = 24
     6 spectral / energy descriptors         =  6
     ─────────────────────────────────────────
-    Total                                    246
+    Total                                    411
 
-The 240-dim MFCC block captures the static and dynamic spectral envelope
-of the infant's vocal tract.  The 6 statistical features add physically
-interpretable descriptors of noisiness, brightness, loudness, tonality,
-and spectral shape.
-
-Relationship to ``feature_extraction.py``
------------------------------------------
-The older ``feature_extraction.py`` module uses 6 summary statistics per
-coefficient (mean, std, min, max, skew, kurtosis) producing a 750-dim
-vector.  This module uses only mean + std (2 stats), which is more compact,
-less prone to overfitting on small classes, and aligns with the standard
-MFCC feature convention in speech/audio literature.  Both modules coexist:
-``feature_extraction.py`` is used by the existing ``run_pipeline.py``, while
-this module is the primary feature extractor for the Phase 1 notebooks and
-the rubric deliverable.
+The CQCC block uses Constant-Q Transform which provides variable
+time-frequency resolution better suited to infant cry harmonics than
+the fixed Mel scale used by MFCCs.
 """
 
 import pickle
 import librosa
 import numpy as np
 from pathlib import Path
+from scipy.fft import dct
 from tqdm import tqdm
 
 from src.config import (
@@ -40,16 +35,18 @@ from src.config import (
     HOP_LENGTH,
     N_FFT,
     N_MELS,
+    CQT_N_BINS,
+    CQT_BINS_PER_OCTAVE,
+    N_CQCC,
+    PITCH_FMIN,
+    PITCH_FMAX,
+    N_CONTRAST_BANDS,
     FEATURES_DIR,
 )
 
 
 class FeatureExtractor:
-    """Extract MFCC and statistical audio features for classical ML.
-
-    This class is the single entry point for converting raw audio waveforms
-    into fixed-length feature vectors suitable for GMM, SVM, and HMM
-    classifiers.
+    """Extract MFCC, CQCC, pitch, contrast, chroma, and spectral features.
 
     Parameters
     ----------
@@ -63,13 +60,6 @@ class FeatureExtractor:
         FFT window size in samples (default from config).
     n_mels : int
         Number of Mel filter banks (default from config).
-
-    Examples
-    --------
-    >>> extractor = FeatureExtractor()
-    >>> features, names = extractor.extract_all(audio_array, sr=8000)
-    >>> features.shape
-    (246,)
     """
 
     def __init__(
@@ -91,47 +81,15 @@ class FeatureExtractor:
     def extract_mfcc(self, audio: np.ndarray, sr: int = None) -> np.ndarray:
         """Extract MFCC, delta-MFCC, and delta-delta-MFCC summary features.
 
-        MFCCs capture the spectral envelope of sound, which encodes vocal
-        tract shape.  Delta and delta-delta capture how the spectrum changes
-        over time — important for cry dynamics.  We use mean+std to summarise
-        temporal variation into a fixed-length feature vector.
-
-        Pipeline
-        --------
-        1. Compute 40 MFCCs from the Mel-scaled power spectrogram.
-           Each coefficient corresponds to a different frequency band on
-           the perceptual Mel scale — lower coefficients capture the broad
-           spectral shape, higher ones capture finer detail.
-        2. Compute first-order temporal derivative (delta) of MFCCs.
-           These encode the *velocity* of spectral change between adjacent
-           frames, capturing transitions like the onset/offset of a cry.
-        3. Compute second-order temporal derivative (delta-delta) of MFCCs.
-           These encode the *acceleration* of spectral change, capturing
-           how abruptly the cry dynamics shift.
-        4. For each coefficient in each of the three matrices, compute the
-           mean and standard deviation over all time frames.  Mean captures
-           the average spectral profile; std captures how much it varies
-           across the clip.
-
-        Parameters
-        ----------
-        audio : np.ndarray
-            1-D waveform array (float32).
-        sr : int, optional
-            Sample rate.  Defaults to ``self.sr``.
-
         Returns
         -------
         np.ndarray, shape (240,)
             Concatenation of [mfcc_mean, mfcc_std, delta_mean, delta_std,
             delta2_mean, delta2_std], each of length n_mfcc (40).
-            Total: 40 * 3 * 2 = 240.
         """
         if sr is None:
             sr = self.sr
 
-        # Step 1 — static MFCCs: shape (n_mfcc, T)
-        # Each row is one cepstral coefficient over T time frames.
         mfcc = librosa.feature.mfcc(
             y=audio, sr=sr,
             n_mfcc=self.n_mfcc,
@@ -140,29 +98,164 @@ class FeatureExtractor:
             n_mels=self.n_mels,
         )
 
-        # Step 2 — first-order derivative (velocity): how fast each
-        # coefficient changes between adjacent frames.
         delta = librosa.feature.delta(mfcc, order=1)
-
-        # Step 3 — second-order derivative (acceleration): rate of change
-        # of the delta — captures onset/offset dynamics of the cry.
         delta2 = librosa.feature.delta(mfcc, order=2)
 
-        # Step 4 — summarise each coefficient's time series with mean + std.
-        # Mean captures the average spectral profile of the cry;
-        # std captures how much the spectrum varies within the clip.
-        mfcc_mean = np.mean(mfcc, axis=1)       # (40,)
-        mfcc_std = np.std(mfcc, axis=1)          # (40,)
-        delta_mean = np.mean(delta, axis=1)      # (40,)
-        delta_std = np.std(delta, axis=1)        # (40,)
-        delta2_mean = np.mean(delta2, axis=1)    # (40,)
-        delta2_std = np.std(delta2, axis=1)      # (40,)
+        mfcc_mean = np.mean(mfcc, axis=1)
+        mfcc_std = np.std(mfcc, axis=1)
+        delta_mean = np.mean(delta, axis=1)
+        delta_std = np.std(delta, axis=1)
+        delta2_mean = np.mean(delta2, axis=1)
+        delta2_std = np.std(delta2, axis=1)
 
         return np.concatenate([
             mfcc_mean, mfcc_std,
             delta_mean, delta_std,
             delta2_mean, delta2_std,
         ]).astype(np.float32)
+
+    # ── CQCC features (Constant-Q Cepstral Coefficients) ──────────────
+
+    def extract_cqcc(self, audio: np.ndarray, sr: int = None) -> np.ndarray:
+        """Extract CQCC features using Constant-Q Transform.
+
+        CQT provides variable time-frequency resolution — higher frequency
+        resolution at low frequencies and higher time resolution at high
+        frequencies.  This better captures infant cry harmonics than the
+        fixed Mel scale used by MFCCs.
+
+        Returns
+        -------
+        np.ndarray, shape (120,)
+            [cqcc_mean, cqcc_std, delta_mean, delta_std,
+             delta2_mean, delta2_std], each of length N_CQCC (20).
+        """
+        if sr is None:
+            sr = self.sr
+
+        # Compute CQT magnitude spectrogram
+        # Limit bins to stay under Nyquist (sr/2). At 8kHz, max ~4kHz.
+        safe_bins = min(CQT_N_BINS, int(CQT_BINS_PER_OCTAVE * np.log2(sr / 2 / 32.7)))
+        C = np.abs(librosa.cqt(
+            y=audio, sr=sr, hop_length=self.hop_length,
+            n_bins=safe_bins, bins_per_octave=CQT_BINS_PER_OCTAVE,
+        ))
+
+        # Convert to log power
+        C_db = librosa.amplitude_to_db(C, ref=np.max)
+
+        # Apply DCT to get cepstral coefficients (analogous to MFCC from Mel)
+        cqcc = dct(C_db, type=2, axis=0, norm='ortho')[:N_CQCC]  # (20, T)
+
+        # Compute deltas
+        delta_cqcc = librosa.feature.delta(cqcc, order=1)
+        delta2_cqcc = librosa.feature.delta(cqcc, order=2)
+
+        return np.concatenate([
+            np.mean(cqcc, axis=1), np.std(cqcc, axis=1),             # 40
+            np.mean(delta_cqcc, axis=1), np.std(delta_cqcc, axis=1), # 40
+            np.mean(delta2_cqcc, axis=1), np.std(delta2_cqcc, axis=1), # 40
+        ]).astype(np.float32)  # Total: 120
+
+    # ── F0 / pitch contour features ──────────────────────────────────
+
+    def extract_pitch_features(self, audio: np.ndarray, sr: int = None) -> np.ndarray:
+        """Extract fundamental frequency (F0) contour features.
+
+        F0 is the dominant pitch of the cry.  Different cry types exhibit
+        different pitch patterns — pain cries tend to be higher pitched,
+        tiredness cries lower and more monotone.
+
+        Returns
+        -------
+        np.ndarray, shape (7,)
+            [f0_mean, f0_std, f0_max, f0_min, f0_range, voiced_fraction, f0_slope]
+        """
+        if sr is None:
+            sr = self.sr
+
+        f0, voiced_flag, voiced_probs = librosa.pyin(
+            audio, fmin=PITCH_FMIN, fmax=PITCH_FMAX,
+            sr=sr, hop_length=self.hop_length,
+        )
+
+        f0_valid = f0[~np.isnan(f0)] if f0 is not None else np.array([])
+
+        if len(f0_valid) > 1:
+            f0_mean = float(np.mean(f0_valid))
+            f0_std = float(np.std(f0_valid))
+            f0_max = float(np.max(f0_valid))
+            f0_min = float(np.min(f0_valid))
+            f0_range = f0_max - f0_min
+            f0_slope = float(np.polyfit(range(len(f0_valid)), f0_valid, 1)[0])
+        elif len(f0_valid) == 1:
+            f0_mean = float(f0_valid[0])
+            f0_std = 0.0
+            f0_max = f0_mean
+            f0_min = f0_mean
+            f0_range = 0.0
+            f0_slope = 0.0
+        else:
+            f0_mean = f0_std = f0_max = f0_min = f0_range = f0_slope = 0.0
+
+        voiced_fraction = float(np.mean(voiced_flag)) if voiced_flag is not None else 0.0
+
+        return np.array([
+            f0_mean, f0_std, f0_max, f0_min, f0_range,
+            voiced_fraction, f0_slope,
+        ], dtype=np.float32)
+
+    # ── Spectral contrast features ───────────────────────────────────
+
+    def extract_spectral_contrast(self, audio: np.ndarray, sr: int = None) -> np.ndarray:
+        """Extract spectral contrast (peak-valley difference per sub-band).
+
+        Returns
+        -------
+        np.ndarray, shape (14,)
+            Mean and std of 7 contrast bands (6 bands + 1 valley).
+        """
+        if sr is None:
+            sr = self.sr
+
+        safe_bands = min(N_CONTRAST_BANDS, 4)  # safe for 8kHz
+        contrast = librosa.feature.spectral_contrast(
+            y=audio, sr=sr,
+            n_bands=safe_bands,
+            fmin=100,
+            hop_length=self.hop_length,
+        )  # shape (safe_bands+1, T)
+
+        stats = np.concatenate([
+            np.mean(contrast, axis=1),
+            np.std(contrast, axis=1),
+        ]).astype(np.float32)
+        # Pad to 14 dims for consistency
+        result = np.zeros(14, dtype=np.float32)
+        result[:len(stats)] = stats
+        return result
+
+    # ── Chroma features ──────────────────────────────────────────────
+
+    def extract_chroma(self, audio: np.ndarray, sr: int = None) -> np.ndarray:
+        """Extract chroma (pitch class) features.
+
+        Returns
+        -------
+        np.ndarray, shape (24,)
+            Mean and std of 12 chroma bins.
+        """
+        if sr is None:
+            sr = self.sr
+
+        chroma = librosa.feature.chroma_stft(
+            y=audio, sr=sr, hop_length=self.hop_length,
+        )  # shape (12, T)
+
+        return np.concatenate([
+            np.mean(chroma, axis=1),
+            np.std(chroma, axis=1),
+        ]).astype(np.float32)  # 24
 
     # ── Statistical / spectral features ───────────────────────────────
 
@@ -171,42 +264,10 @@ class FeatureExtractor:
     ) -> dict:
         """Extract physically interpretable spectral and energy descriptors.
 
-        Each feature captures a distinct acoustic property of the cry signal:
-
-        - **zero_crossing_rate**: Mean rate at which the waveform crosses the
-          zero axis — higher values indicate noisier, higher-frequency content
-          (e.g. breathy burping sounds vs tonal hunger cries).
-        - **spectral_centroid**: Centre of mass of the power spectrum,
-          perceived as the "brightness" of the sound — belly-pain cries tend
-          to have a higher centroid than tired whimpers.
-        - **spectral_rolloff**: Frequency below which 85 % of the total
-          spectral energy is concentrated — characterises the upper frequency
-          limit of the dominant harmonic content.
-        - **spectral_bandwidth**: Weighted standard deviation of frequencies
-          around the centroid — measures how spread out the spectrum is;
-          wider bandwidth often indicates a more distressed, strained cry.
-        - **rms_energy**: Root-mean-square amplitude averaged over analysis
-          frames — a direct measure of perceived loudness, useful for
-          distinguishing loud pain cries from quiet tiredness whimpers.
-        - **spectral_flatness**: Ratio of the geometric mean to the
-          arithmetic mean of the power spectrum — values near 1.0 indicate
-          noise-like signals, values near 0.0 indicate tonal / harmonic
-          content.  Harmonic cries (hunger) score low; noisy grunts
-          (burping) score higher.
-
-        Parameters
-        ----------
-        audio : np.ndarray
-            1-D waveform array (float32).
-        sr : int, optional
-            Sample rate.  Defaults to ``self.sr``.
-
         Returns
         -------
         dict
-            Keys are feature names, values are scalar floats.
-            Order: zero_crossing_rate, spectral_centroid, spectral_rolloff,
-            spectral_bandwidth, rms_energy, spectral_flatness.
+            Keys are feature names, values are scalar floats (6 features).
         """
         if sr is None:
             sr = self.sr
@@ -244,49 +305,34 @@ class FeatureExtractor:
     def extract_all(
         self, audio: np.ndarray, sr: int = None,
     ) -> tuple[np.ndarray, list[str]]:
-        """Concatenate MFCC vector + statistical features into one flat array.
-
-        This is the primary interface for downstream models.  It produces
-        a single 246-dimensional vector that encodes the full acoustic
-        profile of one audio clip.
-
-        Parameters
-        ----------
-        audio : np.ndarray
-            1-D waveform array.
-        sr : int, optional
-            Sample rate.
+        """Concatenate all feature blocks into one flat array.
 
         Returns
         -------
-        features : np.ndarray, shape (246,)
-            Flat feature vector: 240 MFCC-based + 6 spectral/energy.
+        features : np.ndarray, shape (411,)
         feature_names : list[str]
-            Human-readable name for each dimension (length 246).
         """
         if sr is None:
             sr = self.sr
 
-        mfcc_vec = self.extract_mfcc(audio, sr)                   # (240,)
-        stat_dict = self.extract_statistical_features(audio, sr)  # 6 scalars
+        mfcc_vec = self.extract_mfcc(audio, sr)                       # (240,)
+        cqcc_vec = self.extract_cqcc(audio, sr)                       # (120,)
+        pitch_vec = self.extract_pitch_features(audio, sr)            # (7,)
+        contrast_vec = self.extract_spectral_contrast(audio, sr)      # (14,)
+        chroma_vec = self.extract_chroma(audio, sr)                   # (24,)
+        stat_dict = self.extract_statistical_features(audio, sr)      # 6 scalars
         stat_vec = np.array(list(stat_dict.values()), dtype=np.float32)
 
-        features = np.concatenate([mfcc_vec, stat_vec])           # (246,)
-        feature_names = self._build_feature_names(stat_dict)
+        features = np.concatenate([
+            mfcc_vec, cqcc_vec, pitch_vec,
+            contrast_vec, chroma_vec, stat_vec,
+        ])  # (411,)
 
+        feature_names = self._build_feature_names(stat_dict)
         return features, feature_names
 
     def _build_feature_names(self, stat_dict: dict = None) -> list[str]:
-        """Generate a list of human-readable names for every feature dimension.
-
-        The order matches the concatenation in ``extract_all()``:
-        [mfcc_mean, mfcc_std, delta_mean, delta_std, delta2_mean, delta2_std,
-         zcr, centroid, rolloff, bandwidth, rms, flatness].
-
-        Returns
-        -------
-        list[str], length 246
-        """
+        """Generate human-readable names for every feature dimension."""
         names = []
 
         # MFCC block: 3 types x 2 stats x 40 coefficients = 240
@@ -294,6 +340,28 @@ class FeatureExtractor:
             for stat in ["mean", "std"]:
                 for i in range(self.n_mfcc):
                     names.append(f"{prefix}_{i}_{stat}")
+
+        # CQCC block: 3 types x 2 stats x 20 coefficients = 120
+        for prefix in ["cqcc", "delta_cqcc", "delta2_cqcc"]:
+            for stat in ["mean", "std"]:
+                for i in range(N_CQCC):
+                    names.append(f"{prefix}_{i}_{stat}")
+
+        # Pitch features: 7
+        names.extend([
+            "f0_mean", "f0_std", "f0_max", "f0_min", "f0_range",
+            "voiced_fraction", "f0_slope",
+        ])
+
+        # Spectral contrast: 14 (7 bands x 2 stats)
+        for stat in ["mean", "std"]:
+            for i in range(N_CONTRAST_BANDS + 1):
+                names.append(f"spectral_contrast_{i}_{stat}")
+
+        # Chroma: 24 (12 bins x 2 stats)
+        for stat in ["mean", "std"]:
+            for i in range(12):
+                names.append(f"chroma_{i}_{stat}")
 
         # Statistical / spectral features: 6
         if stat_dict is not None:
@@ -314,36 +382,7 @@ class FeatureExtractor:
         dataset_list: list[dict],
         save_path: str | Path = None,
     ) -> tuple[np.ndarray, np.ndarray, list[str]]:
-        """Extract features for every sample in the dataset and save to disk.
-
-        Iterates over the list-of-dicts produced by
-        ``InfantCryLoader.load_dataset()``, extracts a 246-dim feature
-        vector per clip, and persists three files:
-
-        - ``X.npy``  — feature matrix, shape (n_samples, 246)
-        - ``y.npy``  — integer label array, shape (n_samples,)
-        - ``feature_names.pkl`` — ordered list of 246 feature names
-
-        A tqdm progress bar is displayed during extraction.  Corrupted
-        samples that raise exceptions are logged and skipped so that one
-        bad file does not abort the entire batch.
-
-        Parameters
-        ----------
-        dataset_list : list[dict]
-            Each element must have keys ``"audio"`` (np.ndarray),
-            ``"label_idx"`` (int), and ``"filepath"`` (str).
-            This is the output format of ``InfantCryLoader.load_dataset()``.
-        save_path : str or Path, optional
-            Directory to write output files into.
-            Defaults to ``config.FEATURES_DIR``.
-
-        Returns
-        -------
-        X : np.ndarray, shape (n_samples, 246)
-        y : np.ndarray, shape (n_samples,)
-        feature_names : list[str], length 246
-        """
+        """Extract features for every sample in the dataset and save to disk."""
         if save_path is None:
             save_path = FEATURES_DIR
         save_path = Path(save_path)
@@ -369,7 +408,6 @@ class FeatureExtractor:
         X = np.array(X_list, dtype=np.float32)
         y = np.array(y_list, dtype=np.int64)
 
-        # Persist to disk for reproducible downstream usage
         np.save(save_path / "X.npy", X)
         np.save(save_path / "y.npy", y)
         with open(save_path / "feature_names.pkl", "wb") as f:

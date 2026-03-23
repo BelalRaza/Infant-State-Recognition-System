@@ -37,6 +37,20 @@ Thumbs.db
 *.swp
 *.swo
 
+# ── Reports / external docs ────────────────────────────────────────────
+report/*.log
+report/*.aux
+report/*.out
+report/*.toc
+report/*.bbl
+report/*.blg
+report/*.synctex.gz
+DL and ML Rubric*
+ML DL Project List*
+
+# ── Checkpoints / caches ──────────────────────────────────────────────
+checkpoints/
+
 # ── Misc ───────────────────────────────────────────────────────────────
 *.log
 cammands.md

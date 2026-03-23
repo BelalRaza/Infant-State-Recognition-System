@@ -3,17 +3,18 @@ run_pipeline.py — End-to-end Phase 1 training and evaluation script.
 
 Usage
 -----
-    python -m run_pipeline            # from infant-cry-classifier/
-    python run_pipeline.py            # same, if working dir is project root
+    python -m run_pipeline            # from project root
+    python run_pipeline.py            # same
 
 Steps
 -----
 0. (Optional) Augment minority classes  → new .wav files in data/raw/
 1. Load raw audio  → waveforms + labels
-2. Extract features (clip-level + frame-level)
+2. Extract features (clip-level 411-dim + frame-level MFCC sequences)
 3. Train/test split
-4. Train GMM, SVM, (optional) HMM
+4. Train GMM, SVM, HMM, RF, XGBoost, Ensemble
 5. Evaluate all models and save results
+6. Generate comparative visualizations
 """
 
 import sys
@@ -32,17 +33,28 @@ from src.config import (
     RANDOM_STATE,
     TEST_SIZE,
     FEATURES_DIR,
+    N_MFCC,
 )
 from src.data_loader import load_dataset, get_class_distribution
 from src.feature_extraction import (
     extract_features_batch,
     save_features,
     load_features,
+    extract_mfcc,
 )
+from src.feature_extractor import FeatureExtractor
 from src.gmm_classifier import GMMClassifier
 from src.svm_classifier import SVMClassifier
 from src.hmm_model import HMMClassifier
-from src.evaluation import full_evaluation
+from src.rf_classifier import RFClassifier
+from src.xgb_classifier import XGBCryClassifier
+from src.ensemble_classifier import EnsembleClassifier
+from src.evaluation import (
+    full_evaluation,
+    plot_model_comparison,
+    plot_tsne,
+    plot_feature_importance,
+)
 from src.augmentation import run_augmentation, clean_augmented_files
 
 
@@ -64,8 +76,8 @@ def main() -> None:
         help="Delete all previously generated augmented files and re-augment.",
     )
     parser.add_argument(
-        "--aug-target", type=int, default=80,
-        help="Minimum samples per class after augmentation (default: 80).",
+        "--aug-target", type=int, default=300,
+        help="Minimum samples per class after augmentation (default: 300).",
     )
     args = parser.parse_args()
 
@@ -75,17 +87,17 @@ def main() -> None:
 
     # ── 0. Augmentation (Layer 1) ─────────────────────────────────────
     if args.clean_aug:
-        print("\n[0/6] Cleaning previous augmented files …")
+        print("\n[0/7] Cleaning previous augmented files …")
         clean_augmented_files()
 
     if args.augment:
-        print("\n[0/6] Augmenting minority classes …")
+        print("\n[0/7] Augmenting minority classes …")
         run_augmentation(target=args.aug_target)
     else:
-        print("\n[0/6] Augmentation skipped (--no-augment).")
+        print("\n[0/7] Augmentation skipped (--no-augment).")
 
     # ── 1. Load data ───────────────────────────────────────────────────
-    print("\n[1/6] Loading audio data …")
+    print("\n[1/7] Loading audio data …")
     X_raw, y, file_paths = load_dataset()
 
     if len(X_raw) == 0:
@@ -97,22 +109,40 @@ def main() -> None:
     print("Class distribution:", dist)
 
     # ── 2. Extract features ────────────────────────────────────────────
-    print("\n[2/6] Extracting features …")
-    clip_features, mfcc_sequences = extract_features_batch(
-        X_raw, return_frame_level=True,
-    )
+    print("\n[2/7] Extracting features (411-dim enhanced) …")
+
+    # Use the enhanced FeatureExtractor for clip-level features
+    extractor = FeatureExtractor()
+    clip_features_list = []
+    mfcc_sequences = []
+    feature_names = None
+
+    from tqdm import tqdm
+    for i, waveform in enumerate(tqdm(X_raw, desc="Extracting features")):
+        try:
+            feats, names = extractor.extract_all(waveform)
+            clip_features_list.append(feats)
+            if feature_names is None:
+                feature_names = names
+        except Exception as exc:
+            print(f"[ERROR] Feature extraction failed for sample {i}: {exc}")
+            clip_features_list.append(np.zeros(411, dtype=np.float32))
+
+        # Also extract frame-level MFCCs for HMM
+        mfcc_mat = extract_mfcc(waveform)  # (N_MFCC, T)
+        mfcc_sequences.append(mfcc_mat.T)  # (T, N_MFCC)
+
+    clip_features = np.array(clip_features_list, dtype=np.float32)
     print(f"Clip-level feature shape: {clip_features.shape}")
 
-    # Persist the FULL (post-augmentation) feature matrix so that the
-    # standalone model scripts (model_a_gmm.py, model_a_svm.py) pick up
-    # augmented data when they load features/X.npy.
+    # Persist features
     FEATURES_DIR.mkdir(parents=True, exist_ok=True)
     np.save(FEATURES_DIR / "X.npy", clip_features)
     np.save(FEATURES_DIR / "y.npy", y)
-    print(f"  Cached full features → {FEATURES_DIR}/X.npy  ({clip_features.shape})")
+    print(f"  Cached features → {FEATURES_DIR}/X.npy  ({clip_features.shape})")
 
     # ── 3. Train / test split ──────────────────────────────────────────
-    print("\n[3/6] Splitting data (test_size={:.0%}) …".format(TEST_SIZE))
+    print("\n[3/7] Splitting data (test_size={:.0%}) …".format(TEST_SIZE))
 
     indices = np.arange(len(y))
     train_idx, test_idx = train_test_split(
@@ -136,46 +166,121 @@ def main() -> None:
     print(f"  Test  distribution: {get_class_distribution(y_test)}")
 
     # ── 4. Train models ───────────────────────────────────────────────
-    print("\n[4/6] Training models …")
+    print("\n[4/7] Training models …")
+    all_metrics = {}
 
-    # 4a — GMM (with class-weighted log-priors — Layer 2)
-    print("\n--- GMM Classifier (class-weighted) ---")
-    gmm = GMMClassifier(n_components=4, covariance_type="diag")
+    # 4a — GMM (Bayesian, improved)
+    print("\n--- GMM Classifier (Bayesian, class-weighted) ---")
+    gmm = GMMClassifier(n_components=8, covariance_type="diag")
     gmm.fit(X_train, y_train)
     gmm.save()
 
-    # 4b — SVM (with grid search + class_weight='balanced' — Layer 2)
-    print("\n--- SVM Classifier (balanced class weights) ---")
+    # 4b — SVM (with SMOTE + OvO + grid search)
+    print("\n--- SVM Classifier (SMOTE + balanced + OvO) ---")
     svm = SVMClassifier()
     svm.fit_with_grid_search(X_train, y_train, cv=5, scoring="f1_macro")
     svm.save()
 
-    # 4c — HMM (exploratory / bonus)
-    print("\n--- HMM Classifier (exploratory) ---")
-    hmm = HMMClassifier(n_states=5, covariance_type="diag")
+    # 4c — HMM (left-right topology, 8 states)
+    print("\n--- HMM Classifier (left-right, 8 states) ---")
+    hmm = HMMClassifier(n_states=8, covariance_type="diag")
     hmm.fit(train_seqs, y_train)
     hmm.save()
 
-    # ── 5. Evaluate ───────────────────────────────────────────────────
-    print("\n[5/6] Evaluating models …")
+    # 4d — Random Forest (NEW)
+    print("\n--- Random Forest Classifier ---")
+    rf = RFClassifier(n_estimators=500)
+    rf.fit(X_train, y_train)
+    rf.save()
 
+    # 4e — XGBoost (NEW)
+    print("\n--- XGBoost Classifier ---")
+    xgb = XGBCryClassifier(n_estimators=300)
+    xgb.fit(X_train, y_train)
+    xgb.save()
+
+    # ── 5. Evaluate all models ────────────────────────────────────────
+    print("\n[5/7] Evaluating models …")
+
+    # GMM
     gmm_preds = gmm.predict(X_test)
-    gmm_metrics = full_evaluation(y_test, gmm_preds, model_name="GMM")
+    gmm_proba = gmm.predict_proba(X_test)
+    all_metrics["GMM"] = full_evaluation(
+        y_test, gmm_preds, model_name="GMM", y_proba=gmm_proba,
+    )
 
+    # SVM
     svm_preds = svm.predict(X_test)
-    svm_metrics = full_evaluation(y_test, svm_preds, model_name="SVM")
+    svm_proba = svm.predict_proba(X_test)
+    all_metrics["SVM"] = full_evaluation(
+        y_test, svm_preds, model_name="SVM", y_proba=svm_proba,
+    )
 
+    # HMM
     hmm_preds = hmm.predict(test_seqs)
-    hmm_metrics = full_evaluation(y_test, hmm_preds, model_name="HMM")
+    all_metrics["HMM"] = full_evaluation(
+        y_test, hmm_preds, model_name="HMM",
+    )
 
-    # ── 6. Summary ───────────────────────────────────────────────────
+    # Random Forest
+    rf_preds = rf.predict(X_test)
+    rf_proba = rf.predict_proba(X_test)
+    all_metrics["RF"] = full_evaluation(
+        y_test, rf_preds, model_name="RF", y_proba=rf_proba,
+    )
+
+    # XGBoost
+    xgb_preds = xgb.predict(X_test)
+    xgb_proba = xgb.predict_proba(X_test)
+    all_metrics["XGBoost"] = full_evaluation(
+        y_test, xgb_preds, model_name="XGBoost", y_proba=xgb_proba,
+    )
+
+    # 5f — Ensemble (stacking SVM + RF + XGBoost)
+    print("\n--- Ensemble Classifier (Stacking) ---")
+    base_models = {"SVM": svm, "RF": rf, "XGBoost": xgb}
+    ensemble = EnsembleClassifier()
+    ensemble.fit(X_train, y_train, base_models=base_models)
+    ensemble.save()
+
+    ens_preds = ensemble.predict(X_test)
+    ens_proba = ensemble.predict_proba(X_test)
+    all_metrics["Ensemble"] = full_evaluation(
+        y_test, ens_preds, model_name="Ensemble", y_proba=ens_proba,
+    )
+
+    # ── 6. Comparative visualizations ─────────────────────────────────
+    print("\n[6/7] Generating comparative visualizations …")
+
+    # Model comparison bar chart
+    plot_model_comparison(all_metrics)
+
+    # t-SNE visualization
+    plot_tsne(clip_features, y)
+
+    # Feature importance from RF and XGBoost
+    rf_importances = rf.feature_importances(feature_names)
+    plot_feature_importance(rf_importances, model_name="RF", top_n=20)
+
+    xgb_importances = xgb.feature_importances(feature_names)
+    plot_feature_importance(xgb_importances, model_name="XGBoost", top_n=20)
+
+    # ── 7. Summary ───────────────────────────────────────────────────
     print("\n" + "=" * 60)
     print("  Summary")
     print("=" * 60)
-    for name, m in [("GMM", gmm_metrics), ("SVM", svm_metrics), ("HMM", hmm_metrics)]:
-        print(f"  {name:4s}  Acc={m['accuracy']:.4f}  "
-              f"F1_macro={m['macro_f1']:.4f}  "
-              f"F1_weighted={m['weighted_f1']:.4f}")
+    print(f"\n  {'Model':<12s} {'Acc':>7s} {'MacF1':>7s} {'WgtF1':>7s} "
+          f"{'MCC':>7s} {'Kappa':>7s} {'AUC':>7s}")
+    print("  " + "-" * 55)
+    for name, m in all_metrics.items():
+        auc = f"{m['auc_roc']:.4f}" if m.get('auc_roc') is not None else "  N/A"
+        print(f"  {name:<12s} {m['accuracy']:>7.4f} {m['macro_f1']:>7.4f} "
+              f"{m['weighted_f1']:>7.4f} {m['mcc']:>7.4f} {m['kappa']:>7.4f} "
+              f"{auc:>7s}")
+
+    print("\n  Top 10 most important features (RF):")
+    for fname, imp in rf_importances[:10]:
+        print(f"    {fname:<30s}  {imp:.4f}")
 
     print("\nDone. Results saved to results/metrics/ and results/plots/.")
 

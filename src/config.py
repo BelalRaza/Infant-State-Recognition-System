@@ -31,6 +31,18 @@ HOP_LENGTH = 160             # STFT hop in samples (~20 ms at 8 kHz)
 N_FFT = 512                  # FFT window size in samples (~64 ms at 8 kHz)
 N_MELS = 64                  # Mel filter-bank size (appropriate for 4 kHz Nyquist)
 
+# ── CQCC parameters ──────────────────────────────────────────────
+CQT_N_BINS = 84              # number of CQT frequency bins (7 octaves x 12)
+CQT_BINS_PER_OCTAVE = 12     # semitone resolution
+N_CQCC = 20                  # number of cepstral coefficients to keep from DCT
+
+# ── Pitch tracking parameters ────────────────────────────────────
+PITCH_FMIN = 80               # Hz — minimum F0 for infant cry
+PITCH_FMAX = 800              # Hz — maximum F0 for infant cry
+
+# ── Spectral contrast parameters ─────────────────────────────────
+N_CONTRAST_BANDS = 6          # number of frequency bands for spectral contrast
+
 # ── Class labels ───────────────────────────────────────────────────────
 CLASSES = [
     "hunger",

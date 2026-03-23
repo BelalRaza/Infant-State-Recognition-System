@@ -35,10 +35,11 @@ from src.config import RAW_DIR, SAMPLE_RATE, DURATION, CLASSES, CLASS_TO_IDX
 
 # ── Configuration ─────────────────────────────────────────────────────
 
-MIN_TARGET = 80          # minimum samples per class after augmentation
+MIN_TARGET = 300         # minimum samples per class after augmentation
 DOMINANT_CLASS = "hunger" # never augment the majority class
 NOISE_FACTOR = 0.005     # Gaussian noise amplitude (~25–30 dB SNR)
 COMBO_NOISE = 0.003      # lighter noise for the combination technique
+GAIN_DB_RANGE = 6.0      # random gain variation in dB
 
 
 # ── Individual augmentation functions ─────────────────────────────────
@@ -92,6 +93,45 @@ def combination(y: np.ndarray, sr: int) -> np.ndarray:
     return y2.astype(np.float32)
 
 
+def random_gain(y: np.ndarray, db_range: float = GAIN_DB_RANGE) -> np.ndarray:
+    """Apply random gain (volume variation) within ±db_range dB."""
+    gain_db = np.random.uniform(-db_range, db_range)
+    gain_linear = 10.0 ** (gain_db / 20.0)
+    return (y * gain_linear).astype(np.float32)
+
+
+def bandpass_filter(y: np.ndarray, sr: int) -> np.ndarray:
+    """Simulate microphone variation via band-pass filtering.
+
+    Randomly selects a low-cut (200-500 Hz) and high-cut (2500-3800 Hz)
+    to simulate different recording conditions.
+    """
+    from scipy.signal import butter, sosfilt
+
+    low_cut = np.random.uniform(200, 500)
+    high_cut = np.random.uniform(2500, 3800)
+    nyq = sr / 2.0
+    low = low_cut / nyq
+    high = min(high_cut / nyq, 0.99)
+    sos = butter(4, [low, high], btype='band', output='sos')
+    return sosfilt(sos, y).astype(np.float32)
+
+
+def reverb_simulation(y: np.ndarray, sr: int) -> np.ndarray:
+    """Simulate room impulse response (reverb) via convolution with
+    a synthetic exponentially decaying noise burst."""
+    rt60 = np.random.uniform(0.1, 0.4)  # seconds
+    n_samples = int(sr * rt60)
+    impulse = np.random.randn(n_samples)
+    impulse *= np.exp(-np.linspace(0, 6, n_samples))
+    impulse = impulse / np.max(np.abs(impulse))
+    y_rev = np.convolve(y, impulse, mode='full')[:len(y)]
+    # Mix dry/wet
+    wet = np.random.uniform(0.15, 0.35)
+    y_out = (1 - wet) * y + wet * y_rev
+    return y_out.astype(np.float32)
+
+
 # ── Augmentation registry ────────────────────────────────────────────
 # Each entry: (function, kwargs_dict, suffix_tag)
 # They are applied in this order until the target count is reached.
@@ -113,6 +153,13 @@ def _build_augmentation_list(sr: int):
         (lambda y: time_shift(y, sr, shift_sec=0.5),  "sh+"),
         (lambda y: time_shift(y, sr, shift_sec=-0.5), "sh-"),
         (lambda y: combination(y, sr),                "combo"),
+        (lambda y: random_gain(y),                    "gain"),
+        (lambda y: bandpass_filter(y, sr),            "bp"),
+        (lambda y: reverb_simulation(y, sr),          "reverb"),
+        (lambda y: pitch_shift(y, sr, n_steps=0.5),   "ps+05"),
+        (lambda y: pitch_shift(y, sr, n_steps=-0.5),  "ps-05"),
+        (lambda y: time_stretch(y, rate=0.85),         "ts085"),
+        (lambda y: time_stretch(y, rate=1.15),         "ts115"),
     ]
 
 

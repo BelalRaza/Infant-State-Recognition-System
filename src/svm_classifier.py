@@ -5,10 +5,10 @@ Uses an RBF-kernel SVM with grid-searched hyper-parameters (C, gamma).
 Feature scaling is handled internally via a pipeline so that the caller
 only needs to pass raw feature matrices.
 
-Layer 2 imbalance handling: ``class_weight='balanced'`` tells the SVM to
-scale the penalty parameter C inversely proportional to class frequency,
-so minority-class errors cost more.  This works together with the audio
-augmentation layer (Layer 1) to handle residual imbalance.
+Imbalance handling:
+- Layer 1: SMOTE oversampling of minority classes before SVM training
+- Layer 2: ``class_weight='balanced'`` for residual imbalance
+- One-vs-One decision function for better multi-class separation
 """
 
 import numpy as np
@@ -18,6 +18,8 @@ from sklearn.svm import SVC
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
 
 from src.config import CLASSES, MODELS_DIR, RANDOM_STATE
 
@@ -26,12 +28,12 @@ from src.config import CLASSES, MODELS_DIR, RANDOM_STATE
 DEFAULT_PARAM_GRID = {
     "svm__C": [0.1, 1, 10, 100],
     "svm__gamma": ["scale", "auto", 0.01, 0.001],
-    "svm__kernel": ["rbf"],
+    "svm__kernel": ["rbf", "poly"],
 }
 
 
 class SVMClassifier:
-    """Wrapper around sklearn SVC with built-in scaling and grid search."""
+    """Wrapper around sklearn SVC with SMOTE, scaling, and grid search."""
 
     def __init__(
         self,
@@ -44,15 +46,16 @@ class SVMClassifier:
         self.classes = classes if classes is not None else CLASSES
         self.random_state = random_state
 
-        self.pipeline = Pipeline([
+        self.pipeline = ImbPipeline([
             ("scaler", StandardScaler()),
+            ("smote", SMOTE(random_state=random_state, k_neighbors=3)),
             ("svm", SVC(
                 C=C,
                 gamma=gamma,
                 kernel=kernel,
                 class_weight="balanced",
                 random_state=random_state,
-                decision_function_shape="ovr",
+                decision_function_shape="ovo",
                 probability=True,
             )),
         ])
@@ -60,7 +63,7 @@ class SVMClassifier:
         self.best_params: dict = {}
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> "SVMClassifier":
-        """Fit the SVM pipeline on training data."""
+        """Fit the SVM pipeline with SMOTE on training data."""
         self.pipeline.fit(X, y)
         self._fitted = True
         print(f"  SVM fitted — {X.shape[0]} samples, {X.shape[1]} features")
@@ -77,13 +80,7 @@ class SVMClassifier:
     ) -> "SVMClassifier":
         """Fit with exhaustive grid search over hyper-parameters.
 
-        Parameters
-        ----------
-        X, y : training data
-        param_grid : dict  — keys must use the ``pipeline__step`` prefix
-        cv : int  — number of cross-validation folds
-        scoring : str  — metric to optimise
-        n_jobs : int  — parallelism (-1 = all cores)
+        SMOTE is applied inside each CV fold to prevent data leakage.
         """
         if param_grid is None:
             param_grid = DEFAULT_PARAM_GRID

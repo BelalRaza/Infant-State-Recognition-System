@@ -5,31 +5,32 @@ Strategy: train one GMM per class on that class's feature vectors.  At
 inference time, score the test sample under every class GMM and predict
 the class whose model assigns the highest log-likelihood.
 
-Layer 2 imbalance handling: a class-weighted log-prior is added to each
-class's log-likelihood at prediction time.  The prior follows sklearn's
-"balanced" formula:  weight_c = n_total / (n_classes * n_c).
-This penalises the dominant class and boosts minority classes without
-requiring any new training data.
+Improvements over baseline:
+- BayesianGaussianMixture for automatic component selection
+- Increased n_init (10) for more robust EM convergence
+- Per-class component count based on sample size
+- Class-weighted log-priors for imbalance handling
 """
 
 import numpy as np
 import joblib
 from pathlib import Path
-from sklearn.mixture import GaussianMixture
+from sklearn.mixture import BayesianGaussianMixture
 from sklearn.preprocessing import StandardScaler
 
 from src.config import CLASSES, MODELS_DIR, RANDOM_STATE
 
 
 class GMMClassifier:
-    """One-vs-all density-based classifier using Gaussian Mixture Models."""
+    """One-vs-all density-based classifier using Bayesian Gaussian Mixtures."""
 
     def __init__(
         self,
-        n_components: int = 4,
+        n_components: int = 8,
         covariance_type: str = "diag",
-        max_iter: int = 200,
+        max_iter: int = 300,
         reg_covar: float = 1e-3,
+        n_init: int = 10,
         random_state: int = RANDOM_STATE,
         classes: list = None,
     ):
@@ -37,28 +38,19 @@ class GMMClassifier:
         self.covariance_type = covariance_type
         self.max_iter = max_iter
         self.reg_covar = reg_covar
+        self.n_init = n_init
         self.random_state = random_state
         self.classes = classes if classes is not None else CLASSES
-        self.models: dict[str, GaussianMixture] = {}
+        self.models: dict[str, BayesianGaussianMixture] = {}
         self.scaler = StandardScaler()
         self.log_priors: np.ndarray = np.zeros(len(self.classes))
         self._fitted = False
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> "GMMClassifier":
-        """Fit one GMM per class and compute balanced class-weight log-priors.
+        """Fit one Bayesian GMM per class with automatic component selection.
 
-        Parameters
-        ----------
-        X : np.ndarray, shape (n_samples, n_features)
-        y : np.ndarray, shape (n_samples,)  — integer labels
-
-        The log-prior for each class follows sklearn's "balanced" formula::
-
-            weight_c = n_total / (n_classes * n_c)
-            log_prior_c = log(weight_c)
-
-        This is added to each class's log-likelihood at prediction time,
-        boosting minority classes and penalising the dominant one.
+        Uses BayesianGaussianMixture which automatically prunes unnecessary
+        components via the Dirichlet process weight concentration prior.
         """
         X_scaled = self.scaler.fit_transform(X)
 
@@ -67,7 +59,6 @@ class GMMClassifier:
         n_classes = len(self.classes)
         class_counts = np.array([np.sum(y == idx) for idx in range(n_classes)],
                                 dtype=np.float64)
-        # Avoid division by zero for missing classes
         class_counts = np.maximum(class_counts, 1.0)
         weights = n_total / (n_classes * class_counts)
         self.log_priors = np.log(weights)
@@ -81,30 +72,32 @@ class GMMClassifier:
                 continue
 
             X_cls = X_scaled[mask]
-            n_comp = min(self.n_components, X_cls.shape[0])
+            # Scale components based on class sample size
+            n_comp = min(self.n_components, max(2, X_cls.shape[0] // 5))
 
-            gmm = GaussianMixture(
+            gmm = BayesianGaussianMixture(
                 n_components=n_comp,
                 covariance_type=self.covariance_type,
                 max_iter=self.max_iter,
                 reg_covar=self.reg_covar,
                 random_state=self.random_state,
-                n_init=3,
+                n_init=self.n_init,
+                weight_concentration_prior_type="dirichlet_process",
+                weight_concentration_prior=1.0 / n_comp,
             )
             gmm.fit(X_cls)
             self.models[cls] = gmm
-            print(f"  GMM[{cls}] fitted — {n_comp} components, "
-                  f"{X_cls.shape[0]} samples")
+
+            # Count effective components (weight > 0.01)
+            effective = np.sum(gmm.weights_ > 0.01)
+            print(f"  GMM[{cls}] fitted — {n_comp} max components "
+                  f"({effective} effective), {X_cls.shape[0]} samples")
 
         self._fitted = True
         return self
 
     def predict_log_likelihood(self, X: np.ndarray) -> np.ndarray:
-        """Return class-weighted log-likelihood matrix, shape (n_samples, n_classes).
-
-        Each class score is:  log p(x | class) + log(weight_class)
-        where the weight follows the balanced formula computed during fit().
-        """
+        """Return class-weighted log-likelihood matrix, shape (n_samples, n_classes)."""
         X_scaled = self.scaler.transform(X)
         scores = np.zeros((X_scaled.shape[0], len(self.classes)))
 
@@ -122,8 +115,15 @@ class GMMClassifier:
         scores = self.predict_log_likelihood(X)
         return np.argmax(scores, axis=1)
 
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        """Convert log-likelihoods to pseudo-probabilities via softmax."""
+        scores = self.predict_log_likelihood(X)
+        # Numerically stable softmax
+        scores_shifted = scores - np.max(scores, axis=1, keepdims=True)
+        exp_scores = np.exp(scores_shifted)
+        return exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+
     def save(self, path: Path = None) -> Path:
-        """Serialise the full classifier (scaler + all GMMs)."""
         if path is None:
             MODELS_DIR.mkdir(parents=True, exist_ok=True)
             path = MODELS_DIR / "gmm_classifier.joblib"
@@ -133,7 +133,6 @@ class GMMClassifier:
 
     @staticmethod
     def load(path: Path = None) -> "GMMClassifier":
-        """Load a previously saved classifier."""
         if path is None:
             path = MODELS_DIR / "gmm_classifier.joblib"
         clf = joblib.load(path)
