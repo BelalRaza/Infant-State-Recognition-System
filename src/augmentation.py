@@ -290,6 +290,72 @@ def run_augmentation(
     return results
 
 
+def augment_waveforms_in_memory(
+    waveforms: list[np.ndarray],
+    labels: np.ndarray,
+    sr: int = SAMPLE_RATE,
+    duration: float = DURATION,
+    target_per_class: int = MIN_TARGET,
+    dominant_class: str = DOMINANT_CLASS,
+    classes: list = None,
+) -> tuple[list[np.ndarray], np.ndarray]:
+    """Augment minority-class waveforms IN MEMORY (no disk writes).
+
+    Returns only the newly created augmented waveforms and their labels.
+    The caller concatenates these with the originals.
+    """
+    if classes is None:
+        classes = CLASSES
+
+    dominant_idx = CLASS_TO_IDX.get(dominant_class)
+    target_len = int(sr * duration)
+    transforms = _build_augmentation_list(sr)
+
+    aug_waveforms: list[np.ndarray] = []
+    aug_labels: list[int] = []
+
+    labels_arr = np.asarray(labels)
+    unique_labels = np.unique(labels_arr)
+
+    for label_idx in unique_labels:
+        if label_idx == dominant_idx:
+            continue
+
+        class_mask = labels_arr == label_idx
+        class_waveforms = [waveforms[i] for i in range(len(waveforms)) if class_mask[i]]
+        n_originals = len(class_waveforms)
+        n_needed = target_per_class - n_originals
+
+        if n_needed <= 0:
+            continue
+
+        cls_name = classes[label_idx] if label_idx < len(classes) else str(label_idx)
+        print(f"  {cls_name}: {n_originals} train originals -> augmenting {n_needed} in memory")
+
+        created = 0
+        while created < n_needed:
+            for orig in class_waveforms:
+                if created >= n_needed:
+                    break
+                for transform_fn, suffix in transforms:
+                    if created >= n_needed:
+                        break
+                    try:
+                        y_aug = transform_fn(orig)
+                        if len(y_aug) < target_len:
+                            y_aug = np.pad(y_aug, (0, target_len - len(y_aug)))
+                        else:
+                            y_aug = y_aug[:target_len]
+                        aug_waveforms.append(y_aug)
+                        aug_labels.append(label_idx)
+                        created += 1
+                    except Exception:
+                        continue
+
+    print(f"  Total augmented samples created: {len(aug_labels)}")
+    return aug_waveforms, np.array(aug_labels, dtype=np.int64)
+
+
 def clean_augmented_files(data_dir: Path = RAW_DIR, classes: list = None) -> int:
     """Remove all previously generated augmented files (those with ``_aug_``
     in the filename).  Useful for re-running augmentation from scratch.

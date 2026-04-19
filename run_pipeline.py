@@ -55,7 +55,7 @@ from src.evaluation import (
     plot_tsne,
     plot_feature_importance,
 )
-from src.augmentation import run_augmentation, clean_augmented_files
+from src.augmentation import augment_waveforms_in_memory, clean_augmented_files
 
 
 def main() -> None:
@@ -83,22 +83,16 @@ def main() -> None:
 
     print("=" * 60)
     print("  Infant Cry Classifier — Phase 1 Pipeline")
+    print("  (leak-free: split-before-augment)")
     print("=" * 60)
 
-    # ── 0. Augmentation (Layer 1) ─────────────────────────────────────
     if args.clean_aug:
         print("\n[0/7] Cleaning previous augmented files …")
         clean_augmented_files()
 
-    if args.augment:
-        print("\n[0/7] Augmenting minority classes …")
-        run_augmentation(target=args.aug_target)
-    else:
-        print("\n[0/7] Augmentation skipped (--no-augment).")
-
-    # ── 1. Load data ───────────────────────────────────────────────────
-    print("\n[1/7] Loading audio data …")
-    X_raw, y, file_paths = load_dataset()
+    # ── 1. Load ONLY original audio (exclude _aug_ files) ─────────────
+    print("\n[1/7] Loading original audio data (excluding augmented) …")
+    X_raw, y, file_paths = load_dataset(originals_only=True)
 
     if len(X_raw) == 0:
         print("\nNo audio files found. Place .wav files in data/raw/<class>/")
@@ -106,43 +100,11 @@ def main() -> None:
         sys.exit(1)
 
     dist = get_class_distribution(y)
-    print("Class distribution:", dist)
+    print(f"  Originals loaded: {len(y)} samples")
+    print(f"  Class distribution: {dist}")
 
-    # ── 2. Extract features ────────────────────────────────────────────
-    print("\n[2/7] Extracting features (411-dim enhanced) …")
-
-    # Use the enhanced FeatureExtractor for clip-level features
-    extractor = FeatureExtractor()
-    clip_features_list = []
-    mfcc_sequences = []
-    feature_names = None
-
-    from tqdm import tqdm
-    for i, waveform in enumerate(tqdm(X_raw, desc="Extracting features")):
-        try:
-            feats, names = extractor.extract_all(waveform)
-            clip_features_list.append(feats)
-            if feature_names is None:
-                feature_names = names
-        except Exception as exc:
-            print(f"[ERROR] Feature extraction failed for sample {i}: {exc}")
-            clip_features_list.append(np.zeros(411, dtype=np.float32))
-
-        # Also extract frame-level MFCCs for HMM
-        mfcc_mat = extract_mfcc(waveform)  # (N_MFCC, T)
-        mfcc_sequences.append(mfcc_mat.T)  # (T, N_MFCC)
-
-    clip_features = np.array(clip_features_list, dtype=np.float32)
-    print(f"Clip-level feature shape: {clip_features.shape}")
-
-    # Persist features
-    FEATURES_DIR.mkdir(parents=True, exist_ok=True)
-    np.save(FEATURES_DIR / "X.npy", clip_features)
-    np.save(FEATURES_DIR / "y.npy", y)
-    print(f"  Cached features → {FEATURES_DIR}/X.npy  ({clip_features.shape})")
-
-    # ── 3. Train / test split ──────────────────────────────────────────
-    print("\n[3/7] Splitting data (test_size={:.0%}) …".format(TEST_SIZE))
+    # ── 2. Split on originals BEFORE augmentation ──────────────────────
+    print("\n[2/7] Splitting ORIGINAL data (test_size={:.0%}) …".format(TEST_SIZE))
 
     indices = np.arange(len(y))
     train_idx, test_idx = train_test_split(
@@ -152,18 +114,91 @@ def main() -> None:
         stratify=y,
     )
 
-    X_train, X_test = clip_features[train_idx], clip_features[test_idx]
-    y_train, y_test = y[train_idx], y[test_idx]
+    X_train_raw = X_raw[train_idx]
+    X_test_raw = X_raw[test_idx]
+    y_train_orig = y[train_idx]
+    y_test = y[test_idx]
 
-    train_seqs = [mfcc_sequences[i] for i in train_idx]
-    test_seqs = [mfcc_sequences[i] for i in test_idx]
+    print(f"  Originals — Train: {len(y_train_orig)} | Test: {len(y_test)}")
+    print(f"  Train dist: {get_class_distribution(y_train_orig)}")
+    print(f"  Test  dist: {get_class_distribution(y_test)}")
 
+    # ── 3. Augment ONLY training set (in memory) ──────────────────────
+    if args.augment:
+        print("\n[3/7] Augmenting training set in memory …")
+        aug_waveforms, aug_labels = augment_waveforms_in_memory(
+            waveforms=list(X_train_raw),
+            labels=y_train_orig,
+            target_per_class=args.aug_target,
+        )
+        X_train_all = np.concatenate(
+            [X_train_raw, np.array(aug_waveforms, dtype=np.float32)], axis=0
+        )
+        y_train = np.concatenate([y_train_orig, aug_labels], axis=0)
+        print(f"  Training set: {len(y_train_orig)} originals + "
+              f"{len(aug_labels)} augmented = {len(y_train)} total")
+        print(f"  Train dist (after aug): {get_class_distribution(y_train)}")
+        del aug_waveforms, aug_labels
+    else:
+        print("\n[3/7] Augmentation skipped (--no-augment).")
+        X_train_all = X_train_raw
+        y_train = y_train_orig
+
+    # ── 4. Extract features ────────────────────────────────────────────
+    print("\n[4/7] Extracting features (411-dim enhanced) …")
+
+    extractor = FeatureExtractor()
+    feature_names = None
+
+    from tqdm import tqdm
+
+    # Training features (originals + augmented)
+    print("  Extracting training features …")
+    train_clip_list = []
+    train_mfcc_seqs = []
+    for i, waveform in enumerate(tqdm(X_train_all, desc="Train features")):
+        try:
+            feats, names = extractor.extract_all(waveform)
+            train_clip_list.append(feats)
+            if feature_names is None:
+                feature_names = names
+        except Exception as exc:
+            print(f"[ERROR] Train sample {i}: {exc}")
+            train_clip_list.append(np.zeros(411, dtype=np.float32))
+        mfcc_mat = extract_mfcc(waveform)
+        train_mfcc_seqs.append(mfcc_mat.T)
+
+    X_train = np.array(train_clip_list, dtype=np.float32)
+    del train_clip_list, X_train_all
+
+    # Test features (originals only — no augmentation)
+    print("  Extracting test features …")
+    test_clip_list = []
+    test_mfcc_seqs = []
+    for i, waveform in enumerate(tqdm(X_test_raw, desc="Test features")):
+        try:
+            feats, names = extractor.extract_all(waveform)
+            test_clip_list.append(feats)
+        except Exception as exc:
+            print(f"[ERROR] Test sample {i}: {exc}")
+            test_clip_list.append(np.zeros(411, dtype=np.float32))
+        mfcc_mat = extract_mfcc(waveform)
+        test_mfcc_seqs.append(mfcc_mat.T)
+
+    X_test = np.array(test_clip_list, dtype=np.float32)
+    del test_clip_list, X_test_raw
+
+    print(f"  Train features: {X_train.shape} | Test features: {X_test.shape}")
+
+    # Persist features
+    FEATURES_DIR.mkdir(parents=True, exist_ok=True)
     save_features(X_train, y_train, tag="train")
     save_features(X_test, y_test, tag="test")
 
+    train_seqs = train_mfcc_seqs
+    test_seqs = test_mfcc_seqs
+
     print(f"  Train: {len(y_train)} samples | Test: {len(y_test)} samples")
-    print(f"  Train distribution: {get_class_distribution(y_train)}")
-    print(f"  Test  distribution: {get_class_distribution(y_test)}")
 
     # ── 4. Train models ───────────────────────────────────────────────
     print("\n[4/7] Training models …")
@@ -255,8 +290,10 @@ def main() -> None:
     # Model comparison bar chart
     plot_model_comparison(all_metrics)
 
-    # t-SNE visualization
-    plot_tsne(clip_features, y)
+    # t-SNE visualization (on test set only for honest representation)
+    all_features = np.concatenate([X_train, X_test], axis=0)
+    all_labels = np.concatenate([y_train, y_test], axis=0)
+    plot_tsne(all_features, all_labels)
 
     # Feature importance from RF and XGBoost
     rf_importances = rf.feature_importances(feature_names)

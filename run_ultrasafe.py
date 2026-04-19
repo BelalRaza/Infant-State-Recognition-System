@@ -129,7 +129,7 @@ def extract_single_safe(audio, sr=SAMPLE_RATE):
 
 
 def load_files_list():
-    """Just get file paths and labels without loading audio into memory."""
+    """Get file paths and labels for ORIGINAL files only (exclude augmented)."""
     from src.config import RAW_DIR
     files = []
     audio_ext = {".wav", ".mp3", ".ogg", ".flac", ".m4a"}
@@ -138,7 +138,7 @@ def load_files_list():
         if not cls_dir.is_dir():
             continue
         for f in sorted(cls_dir.iterdir()):
-            if f.suffix.lower() in audio_ext:
+            if f.suffix.lower() in audio_ext and "_aug_" not in f.stem:
                 files.append((str(f), idx, cls))
     return files
 
@@ -149,110 +149,150 @@ def main():
 
     print("=" * 60)
     print("  Infant Cry Classifier — ULTRA-SAFE Pipeline")
-    print("  (single-file processing, no pyin)")
+    print("  (leak-free: split-before-augment, single-file processing)")
     print("=" * 60)
 
-    # Check for cached features
+    from src.augmentation import augment_waveforms_in_memory
+
+    # Invalidate old cached features (built from leaky pipeline)
     feat_cache = CHECKPOINT_DIR / "features_411.npz"
-
     if feat_cache.exists():
-        print("\n[CACHE HIT] Loading cached features...")
-        data = np.load(feat_cache, allow_pickle=True)
-        all_features = data["X"]
-        all_labels = data["y"]
-        all_mfcc_seqs = list(data["mfcc_seqs"])
-        print(f"  Loaded {len(all_labels)} samples, shape {all_features.shape}")
-    else:
-        # ── 1. Get file list ──
-        print("\n[1/6] Scanning audio files...")
-        file_list = load_files_list()
-        print(f"  Found {len(file_list)} files")
+        print(f"\n[WARN] Removing stale feature cache: {feat_cache}")
+        feat_cache.unlink()
 
-        # Show distribution
-        from collections import Counter
-        dist = Counter(cls for _, _, cls in file_list)
-        for cls in CLASSES:
-            print(f"    {cls}: {dist.get(cls, 0)}")
+    # ── 1. Get ORIGINAL file list (no _aug_ files) ──
+    print("\n[1/6] Scanning original audio files...")
+    file_list = load_files_list()
+    print(f"  Found {len(file_list)} original files")
 
-        # ── 2. Extract features ONE AT A TIME ──
-        print(f"\n[2/6] Extracting 411-dim features (one-by-one)...")
-        all_features = []
-        all_labels = []
-        all_mfcc_seqs = []
-        errors = 0
+    from collections import Counter
+    dist = Counter(cls for _, _, cls in file_list)
+    for cls in CLASSES:
+        print(f"    {cls}: {dist.get(cls, 0)}")
 
-        for i, (fpath, label_idx, cls) in enumerate(file_list):
-            try:
-                # Load audio
-                audio, _ = librosa.load(fpath, sr=SAMPLE_RATE, duration=7, mono=True)
-                target_len = SAMPLE_RATE * 7
-                if len(audio) < target_len:
-                    audio = np.pad(audio, (0, target_len - len(audio)))
-                else:
-                    audio = audio[:target_len]
-                audio = audio.astype(np.float32)
-
-                # Extract features
-                feats, mfcc_seq = extract_single_safe(audio)
-                all_features.append(feats)
-                all_labels.append(label_idx)
-                all_mfcc_seqs.append(mfcc_seq)
-
-                del audio
-                gc.collect()
-
-                if (i + 1) % 50 == 0:
-                    print(f"    [{i+1}/{len(file_list)}] processed")
-
-            except Exception as e:
-                errors += 1
-                print(f"    [ERROR] {Path(fpath).name}: {e}")
-                all_features.append(np.zeros(411, dtype=np.float32))
-                all_labels.append(label_idx)
-                all_mfcc_seqs.append(np.zeros((10, 13), dtype=np.float32))
-
-        print(f"  Done! {len(all_features)} samples, {errors} errors")
-
-        all_features = np.array(all_features, dtype=np.float32)
-        all_labels = np.array(all_labels, dtype=np.int64)
-
-        # Fix NaN/Inf
-        nan_mask = ~np.isfinite(all_features)
-        if nan_mask.any():
-            print(f"  [WARN] Replacing {nan_mask.sum()} NaN/Inf with 0")
-            all_features[nan_mask] = 0.0
-
-        # Cache
-        np.savez_compressed(feat_cache, X=all_features, y=all_labels,
-                           mfcc_seqs=np.array(all_mfcc_seqs, dtype=object))
-        print(f"  Cached features → {feat_cache}")
-
-    gc.collect()
-
-    # ── 3. Train/test split ──
-    print(f"\n[3/6] Splitting data...")
-    indices = np.arange(len(all_labels))
-    train_idx, test_idx = train_test_split(
-        indices, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=all_labels,
+    # ── 2. Split file list BEFORE extraction ──
+    print(f"\n[2/6] Splitting originals...")
+    file_labels = np.array([label_idx for _, label_idx, _ in file_list])
+    file_indices = np.arange(len(file_list))
+    train_file_idx, test_file_idx = train_test_split(
+        file_indices, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=file_labels,
     )
 
-    X_train = all_features[train_idx]
-    X_test = all_features[test_idx]
-    y_train = all_labels[train_idx]
-    y_test = all_labels[test_idx]
-    train_seqs = [all_mfcc_seqs[i] for i in train_idx]
-    test_seqs = [all_mfcc_seqs[i] for i in test_idx]
+    train_files = [file_list[i] for i in train_file_idx]
+    test_files = [file_list[i] for i in test_file_idx]
+    print(f"  Train: {len(train_files)} | Test: {len(test_files)} originals")
 
-    # Free full arrays
-    del all_features, all_mfcc_seqs
+    # ── 3. Load train originals, augment in memory, extract features ──
+    print(f"\n[3/6] Processing training set (load + augment + extract)...")
+
+    # Load training waveforms
+    train_waveforms = []
+    train_labels_orig = []
+    target_len = SAMPLE_RATE * 7
+    for fpath, label_idx, cls in train_files:
+        try:
+            audio, _ = librosa.load(fpath, sr=SAMPLE_RATE, duration=7, mono=True)
+            if len(audio) < target_len:
+                audio = np.pad(audio, (0, target_len - len(audio)))
+            else:
+                audio = audio[:target_len]
+            train_waveforms.append(audio.astype(np.float32))
+            train_labels_orig.append(label_idx)
+        except Exception as e:
+            print(f"    [ERROR] {Path(fpath).name}: {e}")
     gc.collect()
+
+    y_train_orig = np.array(train_labels_orig, dtype=np.int64)
+
+    # Augment training set in memory
+    print("  Augmenting training set in memory...")
+    aug_waveforms, aug_labels = augment_waveforms_in_memory(
+        waveforms=train_waveforms,
+        labels=y_train_orig,
+        target_per_class=300,
+    )
+    all_train_waveforms = train_waveforms + aug_waveforms
+    y_train = np.concatenate([y_train_orig, aug_labels], axis=0)
+    print(f"  Training: {len(train_waveforms)} originals + {len(aug_waveforms)} aug = {len(y_train)}")
+    del train_waveforms, aug_waveforms, aug_labels
+    gc.collect()
+
+    # Extract training features one at a time
+    print(f"  Extracting training features ({len(all_train_waveforms)} samples)...")
+    train_features = []
+    train_mfcc_seqs = []
+    for i, audio in enumerate(all_train_waveforms):
+        try:
+            feats, mfcc_seq = extract_single_safe(audio)
+            train_features.append(feats)
+            train_mfcc_seqs.append(mfcc_seq)
+        except Exception as e:
+            print(f"    [ERROR] Train sample {i}: {e}")
+            train_features.append(np.zeros(411, dtype=np.float32))
+            train_mfcc_seqs.append(np.zeros((10, 13), dtype=np.float32))
+        del audio
+        gc.collect()
+        if (i + 1) % 100 == 0:
+            print(f"    [{i+1}/{len(all_train_waveforms)}] processed")
+
+    del all_train_waveforms
+    gc.collect()
+
+    X_train = np.array(train_features, dtype=np.float32)
+    del train_features
+
+    # Fix NaN/Inf
+    nan_mask = ~np.isfinite(X_train)
+    if nan_mask.any():
+        print(f"  [WARN] Replacing {nan_mask.sum()} NaN/Inf with 0 in train")
+        X_train[nan_mask] = 0.0
+
+    # ── 4. Extract test features (originals only) ──
+    print(f"\n[4/6] Extracting test features ({len(test_files)} originals)...")
+    test_features = []
+    test_mfcc_seqs = []
+    test_labels = []
+    for i, (fpath, label_idx, cls) in enumerate(test_files):
+        try:
+            audio, _ = librosa.load(fpath, sr=SAMPLE_RATE, duration=7, mono=True)
+            if len(audio) < target_len:
+                audio = np.pad(audio, (0, target_len - len(audio)))
+            else:
+                audio = audio[:target_len]
+            audio = audio.astype(np.float32)
+
+            feats, mfcc_seq = extract_single_safe(audio)
+            test_features.append(feats)
+            test_mfcc_seqs.append(mfcc_seq)
+            test_labels.append(label_idx)
+
+            del audio
+            gc.collect()
+        except Exception as e:
+            print(f"    [ERROR] {Path(fpath).name}: {e}")
+            test_features.append(np.zeros(411, dtype=np.float32))
+            test_mfcc_seqs.append(np.zeros((10, 13), dtype=np.float32))
+            test_labels.append(label_idx)
+
+    X_test = np.array(test_features, dtype=np.float32)
+    y_test = np.array(test_labels, dtype=np.int64)
+    del test_features, test_labels
+
+    nan_mask = ~np.isfinite(X_test)
+    if nan_mask.any():
+        print(f"  [WARN] Replacing {nan_mask.sum()} NaN/Inf with 0 in test")
+        X_test[nan_mask] = 0.0
+
+    gc.collect()
+
+    train_seqs = train_mfcc_seqs
+    test_seqs = test_mfcc_seqs
 
     from src.feature_extraction import save_features
     FEATURES_DIR.mkdir(parents=True, exist_ok=True)
     save_features(X_train, y_train, tag="train")
     save_features(X_test, y_test, tag="test")
 
-    from collections import Counter
     train_dist = Counter(y_train)
     test_dist = Counter(y_test)
     print(f"  Train: {len(y_train)} | Test: {len(y_test)}")

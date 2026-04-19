@@ -21,6 +21,7 @@ from src.config import (
 from src.data_loader import load_dataset, get_class_distribution
 from src.feature_extractor import FeatureExtractor
 from src.feature_extraction import extract_mfcc, save_features
+from src.augmentation import augment_waveforms_in_memory
 from src.gmm_classifier import GMMClassifier
 from src.svm_classifier import SVMClassifier
 from src.hmm_model import HMMClassifier
@@ -71,58 +72,84 @@ def extract_features_batched(X_raw, batch_size=25):
 def main():
     print("=" * 60)
     print("  Infant Cry Classifier — Lightweight Pipeline")
+    print("  (leak-free: split-before-augment)")
     print("=" * 60)
 
-    # ── 1. Load data (no augmentation, use existing files) ──
-    print("\n[1/6] Loading audio data ...")
-    X_raw, y, file_paths = load_dataset()
+    # ── 1. Load ONLY original audio (exclude _aug_ files) ──
+    print("\n[1/6] Loading original audio data ...")
+    X_raw, y, file_paths = load_dataset(originals_only=True)
 
     if len(X_raw) == 0:
         print("No audio files found!")
         sys.exit(1)
 
     dist = get_class_distribution(y)
-    print(f"  Total: {len(y)} samples")
+    print(f"  Originals: {len(y)} samples")
     print(f"  Distribution: {dist}")
 
-    # ── 2. Extract features in batches ──
-    print("\n[2/6] Extracting 411-dim features (batched) ...")
-    clip_features, mfcc_sequences, feature_names = extract_features_batched(X_raw, batch_size=25)
-    print(f"  Feature shape: {clip_features.shape}")
-
-    # Check for NaN/Inf and replace
-    nan_mask = ~np.isfinite(clip_features)
-    if nan_mask.any():
-        n_bad = nan_mask.sum()
-        print(f"  [WARN] Replacing {n_bad} NaN/Inf values with 0")
-        clip_features[nan_mask] = 0.0
-
-    # Cache features
-    FEATURES_DIR.mkdir(parents=True, exist_ok=True)
-    np.save(FEATURES_DIR / "X.npy", clip_features)
-    np.save(FEATURES_DIR / "y.npy", y)
-    print(f"  Cached → {FEATURES_DIR}/")
-
-    gc.collect()
-
-    # ── 3. Train/test split ──
-    print("\n[3/6] Splitting data ...")
+    # ── 2. Split on originals BEFORE augmentation ──
+    print("\n[2/6] Splitting original data ...")
     indices = np.arange(len(y))
     train_idx, test_idx = train_test_split(
         indices, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=y,
     )
 
-    X_train, X_test = clip_features[train_idx], clip_features[test_idx]
-    y_train, y_test = y[train_idx], y[test_idx]
-    train_seqs = [mfcc_sequences[i] for i in train_idx]
-    test_seqs = [mfcc_sequences[i] for i in test_idx]
+    X_train_raw = X_raw[train_idx]
+    X_test_raw = X_raw[test_idx]
+    y_train_orig = y[train_idx]
+    y_test = y[test_idx]
 
+    print(f"  Originals — Train: {len(y_train_orig)} | Test: {len(y_test)}")
+    print(f"  Train dist: {get_class_distribution(y_train_orig)}")
+    print(f"  Test  dist: {get_class_distribution(y_test)}")
+
+    # ── 3. Augment ONLY training set in memory ──
+    print("\n[3/6] Augmenting training set in memory ...")
+    aug_waveforms, aug_labels = augment_waveforms_in_memory(
+        waveforms=list(X_train_raw),
+        labels=y_train_orig,
+        target_per_class=300,
+    )
+    X_train_all = np.concatenate(
+        [X_train_raw, np.array(aug_waveforms, dtype=np.float32)], axis=0
+    )
+    y_train = np.concatenate([y_train_orig, aug_labels], axis=0)
+    print(f"  Training: {len(y_train_orig)} originals + {len(aug_labels)} aug = {len(y_train)}")
+    print(f"  Train dist (after aug): {get_class_distribution(y_train)}")
+    del aug_waveforms, aug_labels, X_train_raw
+    gc.collect()
+
+    # ── 4. Extract features in batches ──
+    print("\n[4/6] Extracting features (batched) ...")
+
+    # Training features
+    print("  Training features ...")
+    clip_train, mfcc_train, feature_names = extract_features_batched(X_train_all, batch_size=25)
+    nan_mask = ~np.isfinite(clip_train)
+    if nan_mask.any():
+        print(f"  [WARN] Replacing {nan_mask.sum()} NaN/Inf with 0")
+        clip_train[nan_mask] = 0.0
+    del X_train_all
+    gc.collect()
+
+    # Test features
+    print("  Test features ...")
+    clip_test, mfcc_test, _ = extract_features_batched(X_test_raw, batch_size=25)
+    nan_mask = ~np.isfinite(clip_test)
+    if nan_mask.any():
+        print(f"  [WARN] Replacing {nan_mask.sum()} NaN/Inf with 0")
+        clip_test[nan_mask] = 0.0
+    del X_test_raw
+    gc.collect()
+
+    X_train, X_test = clip_train, clip_test
+    train_seqs, test_seqs = mfcc_train, mfcc_test
+    print(f"  Train shape: {X_train.shape} | Test shape: {X_test.shape}")
+
+    FEATURES_DIR.mkdir(parents=True, exist_ok=True)
     save_features(X_train, y_train, tag="train")
     save_features(X_test, y_test, tag="test")
-
     print(f"  Train: {len(y_train)} | Test: {len(y_test)}")
-    print(f"  Train dist: {get_class_distribution(y_train)}")
-    print(f"  Test  dist: {get_class_distribution(y_test)}")
 
     # ── 4. Train all models ──
     print("\n[4/6] Training models ...")
@@ -209,7 +236,9 @@ def main():
     # ── 6. Visualizations ──
     print("\n[6/6] Generating plots ...")
     plot_model_comparison(all_metrics)
-    plot_tsne(clip_features, y)
+    all_features = np.concatenate([X_train, X_test], axis=0)
+    all_labels = np.concatenate([y_train, y_test], axis=0)
+    plot_tsne(all_features, all_labels)
 
     rf_imp = rf.feature_importances(feature_names)
     plot_feature_importance(rf_imp, model_name="RF", top_n=20)

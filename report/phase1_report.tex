@@ -32,7 +32,8 @@
   \textbf{Infant State Recognition System}:\\[4pt]
   \textbf{Multi-Class Cry Classification via Neuroscience-Informed}\\
   \textbf{Acoustic Feature Engineering and Classical Machine Learning}\\[10pt]
-  \large Phase~1 Report --- Advanced Machine Learning Foundation
+  \large Phase~1 Report --- Advanced Machine Learning Foundation\\
+  \large with Data Leakage Analysis and Correction
 }
 \author{
   Meghavi Rao (230044) \and Belal Raza (230094) \\[4pt]
@@ -64,9 +65,15 @@ topology, Random Forest (RF), XGBoost, and a stacking ensemble. We
 perform rigorous statistical validation of distributional assumptions
 (ADF stationarity, Shapiro--Wilk Gaussianity), systematic
 hyperparameter tuning with macro-F1 optimisation, and detailed failure
-analysis. XGBoost achieves the best macro-F1 of 0.965 (96.5\% accuracy),
-establishing a strong classical baseline for Phase~2 (deep learning) and
-Phase~3 (hybrid fusion with edge deployment on ESP32/TFLite Micro).
+analysis. Critically, we identify and correct a \textbf{data leakage}
+issue where augmented audio variants leaked across the train/test split,
+inflating initial results (XGBoost: 96.5\% accuracy). After correction
+via a split-before-augment protocol, the Ensemble achieves 83.7\%
+accuracy and SVM achieves the best macro-F1 of 0.270 on the
+leak-free test set of 92 original recordings. This honest evaluation
+reveals the true challenge posed by extreme class imbalance (47:1 ratio)
+and establishes a rigorous baseline for Phase~2 (deep learning) and
+Phase~3 (hybrid fusion with edge deployment).
 \end{abstract}
 
 % ======================================================================
@@ -260,8 +267,28 @@ samples per class:
 
 \noindent
 The dominant class (hunger) is \textit{never} augmented to avoid
-worsening the imbalance. All augmented files are saved with
-\texttt{\_aug\_} tags for traceability.
+worsening the imbalance.
+
+\paragraph{Split-before-augment protocol.}
+A critical methodological correction was applied after initial
+experiments revealed data leakage. In the initial pipeline,
+augmented files were written to disk alongside originals, and a
+subsequent random train/test split scattered augmented variants of the
+same original recording across both sets. This allowed models to be
+tested on near-copies of their training data, producing artificially
+inflated metrics (e.g., XGBoost: 96.5\% accuracy). The corrected
+pipeline enforces:
+\begin{enumerate}[nosep]
+  \item Load only original recordings (457 files, excluding
+        \texttt{\_aug\_} suffixed files).
+  \item Split originals into train (365) and test (92) with 80/20
+        stratification.
+  \item Augment \textit{only} the training set in memory (no disk
+        writes).
+  \item Extract features separately for train and test.
+\end{enumerate}
+This ensures the test set contains \textit{exclusively} original,
+never-augmented recordings, producing an honest evaluation.
 
 \subsection{Feature Extraction}
 \label{sec:features}
@@ -501,107 +528,140 @@ and penalises models that ignore minority classes.
 \section{Results}
 \label{sec:results}
 
-\subsection{Ablation Study: Baseline vs.\ Enhanced Pipeline}
+\subsection{Data Leakage Analysis}
+\label{sec:leakage}
 
-We first present the improvement from the initial baseline (750-dim
-MFCC-only features, default hyperparameters) to the enhanced pipeline
-(411-dim MFCC+CQCC+prosodic features, tuned models, SMOTE).
+Our initial pipeline augmented audio to disk \textit{before} splitting,
+then applied a random 80/20 train/test split on all files (originals +
+augmented). This caused augmented variants of the same original
+recording to appear in both train and test sets. For example, the 8
+original burping clips were augmented to 144 files; a random split
+placed $\sim$115 in training and $\sim$29 in testing---but each test
+sample was a pitch-shifted or time-stretched copy of a training sample.
 
 \begin{table}[H]
 \centering
-\caption{Ablation: Baseline (Phase~1 v0) vs.\ Enhanced (Phase~1 v1).}
-\label{tab:ablation}
-\begin{tabular}{llccc}
+\caption{Impact of data leakage: Leaky vs.\ leak-free evaluation.}
+\label{tab:leakage}
+\begin{tabular}{lcccc}
 \toprule
-\textbf{Config} & \textbf{Model} & \textbf{Accuracy} & \textbf{Macro F1} & \textbf{Key Change} \\
+\textbf{Model} & \multicolumn{2}{c}{\textbf{Leaky (Before Fix)}} & \multicolumn{2}{c}{\textbf{Leak-Free (After Fix)}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+ & Acc & MacF1 & Acc & MacF1 \\
 \midrule
-\multirow{3}{*}{Baseline v0}
-  & GMM (4 comp, full cov) & 0.652 & 0.590 & 750-dim MFCC \\
-  & SVM (default, no SMOTE) & 0.837 & 0.249 & Majority-class collapse \\
-  & HMM (5 states, ergodic) & 0.348 & 0.310 & Insufficient states \\
-\midrule
-\multirow{5}{*}{Enhanced v1}
-  & Bayesian GMM       & 0.622 & 0.547 & +CQCC, Dirichlet prior \\
-  & SVM (SMOTE+OvO)    & 0.926 & 0.921 & SMOTE fixes F1 crisis \\
-  & Random Forest       & 0.929 & 0.929 & 200 trees, balanced \\
-  & \textbf{XGBoost}   & \textbf{0.965} & \textbf{0.965} & 150 rounds, weighted \\
-  & Ensemble           & 0.951 & 0.944 & Stacking meta-learner \\
+XGBoost   & 0.965 & 0.965 & 0.804 & 0.178 \\
+SVM       & 0.926 & 0.921 & 0.815 & 0.270 \\
+RF        & 0.929 & 0.929 & 0.804 & 0.179 \\
+Ensemble  & 0.951 & 0.944 & 0.837 & 0.249 \\
+GMM       & 0.622 & 0.547 & 0.641 & 0.207 \\
+HMM       & 0.348 & 0.310 & 0.674 & 0.162 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\paragraph{Key improvements.}
-\begin{itemize}[nosep]
-  \item \textbf{SVM macro-F1}: $0.249 \rightarrow 0.921$
-        ($+270\%$)---SMOTE + OvO eliminates majority-class collapse.
-  \item \textbf{GMM}: $0.590 \rightarrow 0.547$---despite CQCC features,
-        density estimation struggles with high dimensionality.
-  \item \textbf{Best overall}: XGBoost achieves 96.5\% accuracy and
-        0.965 macro-F1, a $+63.6\%$ improvement over the best
-        baseline (GMM 0.590).
-\end{itemize}
+\paragraph{Key observation.}
+Discriminative models (XGBoost, SVM, RF) suffered the largest drops
+because they had the most capacity to memorise near-duplicate patterns.
+The leaky XGBoost macro-F1 of 0.965 collapsed to 0.178---a
+\textbf{81.6\%} decrease---confirming that the original results were
+almost entirely driven by test-set contamination. Generative models
+(GMM, HMM) were less affected because they model class distributions
+rather than decision boundaries, making them less susceptible to
+memorising augmented variants.
 
-\subsection{Comprehensive Model Comparison}
+\subsection{Leak-Free Model Comparison}
+
+All results below use the corrected split-before-augment protocol.
+The test set consists of 92 original recordings with no augmented
+variants.
 
 \begin{table}[H]
 \centering
-\caption{Full evaluation metrics for all Phase~1 models (Enhanced v1).}
+\caption{Full evaluation metrics (leak-free, 92-sample test set).}
 \label{tab:results_full}
 \begin{tabular}{lcccccc}
 \toprule
 \textbf{Model} & \textbf{Acc} & \textbf{MacF1} & \textbf{WgtF1} & \textbf{MCC} & \textbf{$\kappa$} & \textbf{AUC} \\
 \midrule
-Bayesian GMM   & 0.622 & 0.547 & 0.599 & 0.519 & 0.506 & 0.801 \\
-SVM (SMOTE)    & 0.926 & 0.921 & 0.925 & 0.906 & 0.905 & 0.989 \\
-Random Forest  & 0.929 & 0.929 & 0.929 & 0.910 & 0.910 & 0.987 \\
-\textbf{XGBoost} & \textbf{0.965} & \textbf{0.965} & \textbf{0.965} & \textbf{0.955} & \textbf{0.955} & \textbf{0.992} \\
-Ensemble       & 0.951 & 0.944 & 0.950 & 0.937 & 0.937 & 0.994 \\
+Bayesian GMM    & 0.641 & 0.207 & 0.670 & $-$0.045 & $-$0.044 & 0.454 \\
+\textbf{SVM (SMOTE)} & \textbf{0.815} & \textbf{0.270} & \textbf{0.783} & \textbf{0.216} & \textbf{0.203} & \textbf{0.707} \\
+HMM (left-right) & 0.674 & 0.162 & 0.678 & $-$0.080 & $-$0.079 & --- \\
+Random Forest   & 0.804 & 0.179 & 0.751 & 0.013 & 0.010 & 0.632 \\
+XGBoost         & 0.804 & 0.178 & 0.746 & $-$0.045 & $-$0.032 & 0.661 \\
+Ensemble        & 0.837 & 0.249 & 0.780 & 0.155 & 0.096 & 0.599 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\paragraph{Interpretation.}
+SVM achieves the highest macro-F1 (0.270), while Ensemble achieves the
+highest accuracy (83.7\%). However, the near-zero MCC and $\kappa$ values
+for most models indicate that performance is dominated by majority-class
+(hunger) prediction. The accuracy metric is misleading: a trivial
+``always predict hunger'' classifier would achieve $77/92 = 83.7\%$
+accuracy.
 
 \subsection{Per-Class Analysis}
 
 \begin{table}[H]
 \centering
-\caption{Per-class F1 scores for each model (Enhanced v1).}
+\caption{Per-class F1 scores (leak-free evaluation).}
 \label{tab:perclass}
 \begin{tabular}{lccccc}
 \toprule
 \textbf{Model} & \textbf{Hunger} & \textbf{Belly Pain} & \textbf{Burping} & \textbf{Discomfort} & \textbf{Tiredness} \\
+ & (77) & (3) & (2) & (5) & (5) \\
 \midrule
-Bayesian GMM   & 0.67 & 0.74 & 0.13 & 0.62 & 0.58 \\
-SVM (SMOTE)    & 0.93 & 0.94 & 0.88 & 0.95 & 0.90 \\
-Random Forest  & 0.92 & 0.92 & 0.93 & 0.93 & 0.94 \\
-\textbf{XGBoost} & \textbf{0.96} & \textbf{0.98} & \textbf{0.97} & \textbf{0.96} & \textbf{0.97} \\
-Ensemble       & 0.96 & 0.98 & 0.89 & 0.96 & 0.93 \\
+Bayesian GMM   & 0.78 & 0.00 & 0.00 & 0.25 & 0.00 \\
+SVM (SMOTE)    & 0.91 & 0.00 & 0.00 & 0.44 & 0.00 \\
+HMM            & 0.81 & 0.00 & 0.00 & 0.00 & 0.00 \\
+Random Forest  & 0.90 & 0.00 & 0.00 & 0.00 & 0.00 \\
+XGBoost        & 0.89 & 0.00 & 0.00 & 0.00 & 0.00 \\
+Ensemble       & 0.91 & 0.00 & 0.00 & 0.33 & 0.00 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+\paragraph{Critical finding.}
+All models achieve zero F1 on belly\_pain (3 test samples),
+burping (2 test samples), and tiredness (5 test samples). Only SVM
+recognises discomfort ($F_1 = 0.44$). This reveals the fundamental
+limitation: with only 2--5 test samples per minority class, classical
+ML models trained on hand-crafted features lack the representational
+capacity to generalise from such limited original data, even with
+training-set augmentation.
+
 \subsection{Failure Analysis}
 \label{sec:failure}
 
+\paragraph{Majority-class collapse.}
+All six models exhibit majority-class collapse: they predict
+``hunger'' for nearly all inputs because hunger dominates both
+training (305/1505 original + augmented) and testing (77/92 = 83.7\%).
+The high accuracy ($\sim$80--84\%) masks the fact that minority classes
+are completely ignored (macro-F1 $\leq 0.27$).
+
+\paragraph{Augmentation cannot replace real data.}
+Despite augmenting burping from 8 to 300 training samples,
+all models achieve $F_1 = 0.00$ on the 2 original burping test samples.
+The 17 augmentation transforms (pitch shift, time stretch, noise) modify
+surface-level acoustics but preserve the underlying spectral template.
+With only 8 original templates, the augmented training set lacks the
+spectral diversity needed for generalisation.
+
 \paragraph{GMM struggles with high dimensionality.}
-The Bayesian GMM achieves only 62.2\% accuracy. Burping F1 is
-particularly low (0.13) due to density estimation challenges in
-411-dimensional space. The Dirichlet process collapsed most
-components to a single effective component per class, suggesting
-the feature space is too high-dimensional for generative modelling.
+The Bayesian GMM achieves only 64.1\% accuracy, with the Dirichlet
+process collapsing most components to a single effective component per
+class. The 411-dimensional feature space is too sparse for reliable
+density estimation with limited data.
 
-\paragraph{Burping: data scarcity challenge.}
-Despite augmentation from 8 to 144 samples, burping remains the
-hardest class for the GMM ($F_1=0.13$). However, discriminative
-models handle it well: XGBoost achieves $F_1=0.97$ on burping,
-demonstrating that the augmented features are discriminative even
-if the density structure is difficult to estimate.
-
-\paragraph{Discomfort--belly pain confusion.}
-The confusion matrix reveals occasional misclassification between
-discomfort and belly pain. Both states involve abdominal
-distress, producing similar $F_0$ ranges (350--600\,Hz). XGBoost
-handles this well ($F_1 \geq 0.96$ for both) via gradient-boosted
-decision boundaries that exploit subtle spectral differences.
+\paragraph{SVM is the only model recognising minority classes.}
+SVM achieves $F_1 = 0.44$ on discomfort (the only non-zero minority
+F1 across all models), likely because the SMOTE + OvO + balanced
+class-weight triple strategy provides the most robust imbalance
+handling. The OvO decomposition is particularly beneficial, reducing
+each sub-problem to a binary decision where the minority class is
+not overwhelmed.
 
 % ======================================================================
 \section{Feature Importance Analysis}
@@ -612,33 +672,37 @@ discriminative features:
 
 \begin{table}[H]
 \centering
-\caption{Top 10 most important features (Random Forest MDI).}
+\caption{Top 10 most important features (Random Forest MDI, leak-free).}
 \label{tab:feature_imp}
 \begin{tabular}{clc}
 \toprule
 \textbf{Rank} & \textbf{Feature} & \textbf{Importance} \\
 \midrule
-1  & CQCC\_1\_mean       & 0.0312 \\
-2  & CQCC\_2\_mean       & 0.0287 \\
-3  & F0\_mean            & 0.0256 \\
-4  & MFCC\_1\_mean       & 0.0234 \\
-5  & F0\_range           & 0.0221 \\
-6  & CQCC\_1\_std        & 0.0198 \\
-7  & spectral\_contrast\_band2\_mean & 0.0185 \\
-8  & MFCC\_2\_mean       & 0.0173 \\
-9  & voiced\_fraction    & 0.0168 \\
-10 & CQCC\_3\_mean       & 0.0154 \\
+1  & spectral\_contrast\_1\_std & 0.0127 \\
+2  & mfcc\_2\_std              & 0.0117 \\
+3  & spectral\_contrast\_2\_mean & 0.0108 \\
+4  & mfcc\_9\_mean             & 0.0103 \\
+5  & voiced\_fraction          & 0.0090 \\
+6  & cqcc\_4\_mean             & 0.0085 \\
+7  & delta\_2\_std             & 0.0079 \\
+8  & f0\_min                   & 0.0078 \\
+9  & rms\_energy               & 0.0073 \\
+10 & delta2\_7\_std            & 0.0073 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{Key observations.}
-CQCC features dominate the top 10, validating our hypothesis that
-CQT-based representations are superior to MFCCs for infant cry
-classification. The $F_0$ mean and range rank 3rd and 5th,
-confirming that pitch dynamics are diagnostically valuable. Spectral
-contrast (rank 7) captures the harmonic-to-noise ratio that
-distinguishes phonation modes.
+Spectral contrast features rank highest, suggesting that harmonic
+structure (distinguishing modal phonation from dysphonation) is the
+most discriminative acoustic property. The MFCC variability features
+(std) outrank the mean values, indicating that \textit{temporal
+instability} of the spectral envelope is more informative than its
+average shape. The voiced fraction ($F_0$-based) ranks 5th,
+confirming the diagnostic value of prosodic features. Notably,
+feature importances are more uniformly distributed compared to the
+leaky evaluation, where a few features dominated---consistent with
+a model that is genuinely learning rather than memorising.
 
 % ======================================================================
 \section{Discussion}
@@ -661,11 +725,13 @@ The model hierarchy reveals a clear bias--variance tradeoff:
 
 \subsection{Theoretical Assumptions}
 
-\paragraph{I.I.D.\ assumption.}
-Our augmented samples violate strict independence---augmented clips
-from the same original are correlated. We mitigate this via stratified
-splitting (ensuring augmented variants of the same clip appear in the
-same split), but acknowledge this as a limitation.
+\paragraph{I.I.D.\ assumption and data leakage.}
+Our initial pipeline violated the i.i.d.\ assumption by allowing
+augmented variants of the same original to appear in both train and
+test sets. The corrected split-before-augment protocol ensures
+strict separation: augmentation is applied only to the training
+partition, and the test set contains exclusively original recordings.
+This produces a pessimistic but honest evaluation.
 
 \paragraph{Gaussianity violations.}
 The 28\% of feature--class combinations that fail the Shapiro--Wilk
@@ -677,59 +743,81 @@ XGBoost).
 \subsection{Limitations}
 
 \begin{enumerate}[nosep]
-  \item \textbf{Dataset homogeneity}: All clips derive from the
-        Donate-a-Cry corpus recorded under controlled conditions.
-        Real-world deployment will face domain shift from background
-        noise, microphone variability, and infant individuality.
-  \item \textbf{Augmentation diversity}: Augmenting 8 burping clips
-        17 ways yields 144 samples, but all share the same 8 spectral
-        templates. Cross-corpus data (Baby Chillanto, CryCeleb) would
-        improve diversity.
+  \item \textbf{Extreme class imbalance}: The 47:1 ratio between
+        hunger (382) and burping (8) means the leak-free test set
+        contains only 2--5 samples per minority class. Per-class
+        metrics have very high variance at these sample sizes.
+  \item \textbf{Augmentation cannot substitute real data}: All 17
+        transforms operate on the same spectral templates, limiting
+        diversity. Cross-corpus data (Baby Chillanto, CryCeleb) would
+        provide genuinely new acoustic patterns.
   \item \textbf{Clip-level features}: Summarising temporal dynamics
         into per-clip statistics loses information about cry
         progression patterns that sequence models (LSTM, Transformer)
         can capture.
+  \item \textbf{Dataset homogeneity}: All clips derive from the
+        Donate-a-Cry corpus. Real-world deployment will face domain
+        shift from background noise, microphone variability, and
+        infant individuality.
 \end{enumerate}
 
 \subsection{Phase~2 and Phase~3 Roadmap}
 
 \paragraph{Phase~2 (Deep Learning).}
-We will train CNN and Transformer architectures on log-Mel
-spectrograms, treating audio as images. Key techniques: depthwise
-separable convolutions (MobileNetV2), multi-head self-attention,
-knowledge distillation, and spectrogram augmentation (SpecAugment).
+The leak-free results demonstrate that hand-crafted features with
+classical ML are insufficient for minority-class recognition in this
+data regime. Phase~2 will train CNN architectures on log-Mel
+spectrograms (64 mel bands $\times$ 350 time frames), leveraging
+transfer learning from pretrained audio models (e.g., MobileNetV2,
+YAMNet) to overcome the limited training data. SpecAugment (time and
+frequency masking) and mixup augmentation will provide additional
+regularisation. Focal loss will replace cross-entropy to focus
+learning on hard minority-class examples.
 
 \paragraph{Phase~3 (Hybrid + Edge Deployment).}
 Decision-level fusion of Phase~1 probabilistic scores with Phase~2
 neural embeddings, deployed on ESP32 via TFLite Micro and in browsers
-via ONNX.js. This directly addresses the project's core requirement:
-\textit{``Integrate signal processing with a lightweight learning
-model suitable for constrained devices.''}
+via ONNX.js. The hybrid architecture enables an ablation study:
+Model~A (classical ML only, macro-F1 $= 0.27$) vs.\ Model~B (DL only)
+vs.\ Model~C (hybrid fusion, target: outperform both).
 
 % ======================================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-This phase establishes a strong classical machine-learning baseline for
-five-class infant cry classification. The key innovations are:
+This phase establishes a rigorous, leak-free classical ML baseline for
+five-class infant cry classification. The key contributions are:
 
 \begin{enumerate}[nosep]
-  \item A \textbf{411-dimensional feature vector} enriched with CQCCs
-        and F0 dynamics, inspired by the neuroscience of infant
-        vocalisation.
-  \item \textbf{SMOTE-based imbalance correction} that recovers SVM
-        macro-F1 from 0.25 to 0.921---a 270\% improvement.
-  \item \textbf{XGBoost} achieving 96.5\% accuracy and
-        0.965 macro-F1, demonstrating that principled classical ML can
-        match state-of-the-art performance on this task.
-  \item A \textbf{stacking ensemble} with the highest AUC-ROC (0.994),
-        combining SVM, Random Forest, and XGBoost predictions.
+  \item A \textbf{411-dimensional neuroscience-informed feature vector}
+        combining MFCCs, CQCCs, F0 dynamics, spectral contrast, and
+        chroma---grounded in the acoustic science of infant cry
+        phonation modes.
+  \item \textbf{Identification and correction of data leakage} in the
+        augmentation pipeline, which inflated prior results from
+        macro-F1 $= 0.965$ to a corrected $0.270$---an 81.6\% decrease
+        that reveals the true difficulty of this task under extreme
+        class imbalance.
+  \item \textbf{Split-before-augment protocol} ensuring test-set
+        integrity: originals split first, augmentation applied only to
+        training data in memory.
+  \item \textbf{Honest baseline metrics}: SVM (macro-F1 $= 0.270$,
+        AUC $= 0.707$) provides the reference point for Phase~2
+        deep learning improvement.
+  \item \textbf{Six classical models} with comprehensive imbalance
+        handling (SMOTE, OvO, balanced class weights, Bayesian priors),
+        demonstrating that classical ML alone cannot overcome the
+        fundamental data scarcity (8 burping originals).
 \end{enumerate}
 
 \noindent
-Phase~2 will introduce deep learning models operating on spectrogram
-representations, and Phase~3 will fuse both approaches into a hybrid
-system deployable on edge devices.
+The data leakage discovery is itself a methodological contribution:
+it demonstrates the critical importance of split-before-augment
+protocols in audio classification, particularly when augmentation
+preserves the underlying spectral template. Phase~2 will introduce
+CNN architectures on mel-spectrogram representations with transfer
+learning, and Phase~3 will fuse classical and deep approaches into a
+hybrid system deployable on edge devices.
 
 % ======================================================================
 \bibliographystyle{ieeetr}

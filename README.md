@@ -82,8 +82,11 @@ extracted from infant cry recordings.
 | Model | Role | Library |
 |-------|------|---------|
 | **Gaussian Mixture Model (GMM)** | Density-based generative classifier — one GMM per class | `scikit-learn` |
-| **Support Vector Machine (SVM)** | Discriminative classifier with RBF kernel | `scikit-learn` |
-| **Hidden Markov Model (HMM)** | Exploratory / bonus — captures temporal dynamics | `hmmlearn` |
+| **Support Vector Machine (SVM)** | Discriminative classifier with SMOTE + OvO + grid search | `scikit-learn` |
+| **Hidden Markov Model (HMM)** | Left-right topology (8 states), captures temporal dynamics | `hmmlearn` |
+| **Random Forest (RF)** | Ensemble of 500 decision trees with balanced subsampling | `scikit-learn` |
+| **XGBoost** | Gradient boosting with class-weighted loss | `xgboost` |
+| **Stacking Ensemble** | Meta-learner combining SVM + RF + XGBoost probabilities | `scikit-learn` |
 
 ### Evaluation metrics
 
@@ -117,15 +120,25 @@ models.
 
 ---
 
-## Results
+## Results (Phase 1 — Leak-Free Evaluation)
 
-> Updated as experiments are completed.
+Evaluated on 92 original recordings (no augmented data in test set).
+Split-before-augment protocol ensures test-set integrity.
 
-| Model | Accuracy | Macro F1 | Weighted F1 | Notes |
-|-------|----------|----------|-------------|-------|
-| GMM   | 0.652    | 0.590    | 0.665       | 4 components, diag covariance, class-weighted log-priors |
-| SVM   | 0.837    | 0.249    | 0.780       | RBF kernel, grid-searched C/γ, balanced class weights |
-| HMM   | 0.348    | 0.393    | 0.353       | 5 hidden states, exploratory / bonus model |
+| Model | Accuracy | Macro F1 | Weighted F1 | MCC | AUC-ROC |
+|-------|----------|----------|-------------|-----|---------|
+| **SVM** | 0.815 | **0.270** | 0.783 | 0.216 | 0.707 |
+| Ensemble | **0.837** | 0.249 | 0.780 | 0.155 | 0.599 |
+| GMM | 0.641 | 0.207 | 0.670 | −0.045 | 0.454 |
+| RF | 0.804 | 0.179 | 0.751 | 0.013 | 0.632 |
+| XGBoost | 0.804 | 0.178 | 0.746 | −0.045 | 0.661 |
+| HMM | 0.674 | 0.162 | 0.678 | −0.080 | — |
+
+**Note:** Initial results (XGBoost: 96.5% accuracy) were inflated by
+data leakage — augmented variants of the same recording appeared in
+both train and test sets. The corrected results above reflect true
+generalisation performance under extreme class imbalance (382 hunger
+vs 8 burping originals).
 
 ---
 

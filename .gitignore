@@ -54,3 +54,12 @@ checkpoints/
 # ── Misc ───────────────────────────────────────────────────────────────
 *.log
 cammands.md
+
+# ── Large / generated files ────────────────────────────────────────────
+*.zip
+*.mp4
+*.mp3
+
+# ── Planning / scratch docs ────────────────────────────────────────────
+deep-research-plan.md
+mldl_project_info.md

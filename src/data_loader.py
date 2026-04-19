@@ -115,6 +115,7 @@ class InfantCryLoader:
     def load_dataset(
         self,
         data_dir: str | Path = None,
+        originals_only: bool = False,
     ) -> list[dict]:
         """Walk *data_dir*/<class>/ and load every audio file.
 
@@ -155,6 +156,7 @@ class InfantCryLoader:
             audio_files = sorted(
                 f for f in cls_dir.iterdir()
                 if f.suffix.lower() in audio_extensions
+                and (not originals_only or "_aug_" not in f.stem)
             )
             if not audio_files:
                 print(f"[WARN] No audio files in {cls_dir}")
@@ -360,6 +362,7 @@ def load_dataset(
     duration: float = DURATION,
     classes: list = None,
     return_list: bool = False,
+    originals_only: bool = False,
 ) -> tuple[np.ndarray, np.ndarray, list[str]] | tuple[list[dict], list[str]]:
     """Load entire dataset and return (X, y, file_paths) arrays.
 
@@ -373,7 +376,7 @@ def load_dataset(
         list directly into ``FeatureExtractor.extract_and_save_dataset()``.
     """
     loader = InfantCryLoader(sr=sr, duration=duration, classes=classes)
-    dataset = loader.load_dataset(data_dir)
+    dataset = loader.load_dataset(data_dir, originals_only=originals_only)
     if return_list:
         return dataset, loader.classes
     return loader.to_arrays(dataset)
