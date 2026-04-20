@@ -1,0 +1,56 @@
+Component,Score,Level,Criteria Description
+Architecture Logic,0,Missing,No distinct architecture identified.
+Architecture Logic,1,Incompatible,"Architecture chosen contradicts the data type (e.g., using a basic MLP for complex image data, or RNNs for non-sequential data)."
+Architecture Logic,2,Outdated,"Uses deprecated architectures (e.g., AlexNet or vanilla RNNs) without a specific justification for why they are preferred over modern baselines."
+Architecture Logic,3,Default,Copy-paste implementation of a tutorial model. No modifications made to layer depth or width.
+Architecture Logic,4,Mismatched,Model is vastly over-parameterized (massive Transformer for tiny dataset) or under-parameterized for the task complexity.
+Architecture Logic,5,Correct (Proficient),"Correct application of standard modern architectures (e.g., ResNet, LSTM, VAE). The model runs and converges."
+Architecture Logic,6,Configured,"Evidence of thoughtful configuration. Layers, stride, or kernel sizes are adjusted based on input resolution or sequence length."
+Architecture Logic,7,Specialized,"Justifies choice of variants (e.g., using Bi-Directional LSTM vs standard, or ResNet50 vs ResNet18) based on resource/accuracy trade-offs."
+Architecture Logic,8,Advanced (Exemplary),"Implements specialized architectural features (e.g., Attention mechanisms, Skip connections, or specific weight initializations) to solve specific problems."
+Architecture Logic,9,Optimized,"Modifies the architecture for system constraints (e.g., Flash Attention, Quantization awareness, or pruning) or modifies the loss function."
+Architecture Logic,10,Novel,Introduces a novel custom block or architectural modification. The design demonstrates a deep understanding of inductive bias.
+DL Literature Review,0,Missing,No references provided.
+DL Literature Review,1,Irrelevant,Citations are from non-academic blogs or unrelated fields.
+DL Literature Review,2,Aged,"Relies entirely on foundational papers (e.g., 2012-2015) without acknowledging recent advancements."
+DL Literature Review,3,Listing,"Lists papers without connecting them. Fails to define the specific sub-niche (e.g., Object Detection) clearly."
+DL Literature Review,4,Superficial,"Mentions architectures (e.g., ""We used BERT"") but does not cite the original paper or explain why it was a breakthrough."
+DL Literature Review,5,Contextual (Proficient),Cites modern neural techniques relevant to the domain. Sets the context for the project.
+DL Literature Review,6,Comparative,"Compares different families of models (e.g., ""CNN vs Transformer for Vision"") and explains the trade-offs found in literature."
+DL Literature Review,7,Gap-Analysis,"Clearly identifies what existing models struggle with (e.g., ""Transformers struggle with long-context without modification"")."
+DL Literature Review,8,Research-Grade (Exemplary),"Follows conference paper format (Abstract, Intro, Methods). Review is critical, not just descriptive."
+DL Literature Review,9,Synthesized,"Synthesizes concepts from different domains (e.g., applying NLP attention mechanisms to Time Series)."
+DL Literature Review,10,Comprehensive,A thorough review of the State of the Art (SOTA). The project is positioned as a logical next step in the research lineage.
+DL Dataset & Regularization,0,Negligent,Raw data used. Overfitting is rampant and ignored.
+DL Dataset & Regularization,1,Unsafe,"Data leakage present (e.g., test set used in training/validation loop)."
+DL Dataset & Regularization,2,Basic,Simple split (Train/Test) used. No validation set or cross-validation strategy.
+DL Dataset & Regularization,3,Reactive,"Regularization (Dropout) added only after the model failed completely, without strategy."
+DL Dataset & Regularization,4,Standard,Basic scaling and standard batch sizes used. No augmentation.
+DL Dataset & Regularization,5,Effective (Proficient),"Effective use of regularization (Dropout, Early Stopping, Weight Decay) to handle noise. Standard Augmentation applied."
+DL Dataset & Regularization,6,Robust,"Handles class imbalance explicitly (Weighted Loss, Oversampling). Augmentation is visualized and verified."
+DL Dataset & Regularization,7,Strategic,"Data pipeline is optimized (e.g., tf.data or Dataloaders with pre-fetching). Pre-processing aligns with pre-trained model requirements."
+DL Dataset & Regularization,8,Rigorous (Exemplary),"Advanced handling of representation (e.g., Embeddings, Tokenization strategy). Uses advanced augmentation (MixUp, CutMix)."
+DL Dataset & Regularization,9,Curated,Implements Curriculum Learning or sophisticated sampling strategies (Hard Negative Mining).
+DL Dataset & Regularization,10,Fusion,Handles heterogeneous data or creates a novel self-supervised learning task to boost data efficiency.
+Technical Validation,0,None,No metrics reported.
+Technical Validation,1,Misleading,Reports training accuracy only. No test/validation metrics.
+Technical Validation,2,Inappropriate,"Uses wrong metric for task (e.g., Accuracy for highly imbalanced medical data instead of F1/AUC)."
+Technical Validation,3,Single-Point,Reports a single final number. No learning curves (Loss/Epoch plots) shown.
+Technical Validation,4,Visual,"Shows loss curves but does not interpret them (e.g., ignores obvious divergence or oscillation)."
+Technical Validation,5,Solid (Proficient),"Uses appropriate metrics (Perplexity for NLP, Dice for Segmentation). Learning curves are interpreted correctly."
+Technical Validation,6,Comparative,"Compares results against a trivial baseline (e.g., ""Always predict zero"") to prove model value."
+Technical Validation,7,Diagnostic,Uses Confusion Matrices or error analysis to identify specific classes where the model struggles.
+Technical Validation,8,Robustness (Exemplary),"Tests model robustness (e.g., adding noise to input, adversarial attacks, or out-of-distribution testing)."
+Technical Validation,9,Ablation,Performs Ablation Studies (removing parts of the model to see what contributes to performance).
+Technical Validation,10,Explainable,"Implements interpretability techniques (Grad-CAM, SHAP, Attention Maps) to validate the model is learning valid features."
+Theoretical Rigor,0,None,No explanation of mechanics.
+Theoretical Rigor,1,Wrong,Fundamental misunderstanding of Backpropagation or Activation functions.
+Theoretical Rigor,2,Buzzwords,"Uses terms like ""Vanishing Gradient"" without understanding how the architecture solves it."
+Theoretical Rigor,3,Generic,"Generic explanations of ""Neural Networks"" rather than the specific architecture used."
+Theoretical Rigor,4,Shallow,"Explains the ""What"" (layers used) but not the ""Why"" (math behind the layers)."
+Theoretical Rigor,5,Clear (Proficient),"Clear explanation of model mechanics (e.g., how Convolutions work, or the Attention formula)."
+Theoretical Rigor,6,Optimization,Discusses the optimizer choice (Adam vs SGD) and learning rate schedules (Warmup/Decay).
+Theoretical Rigor,7,Architectural,"Explains specific mechanisms (e.g., ""Why Residual connections aid gradient flow"")."
+Theoretical Rigor,8,Mastery (Exemplary),"Deep technical mastery; explains mathematical nuances (e.g., distribution shifts in Batch Norm)."
+Theoretical Rigor,9,Derivation,Can derive the loss function gradients or explain the information-theoretic basis of the model.
+Theoretical Rigor,10,First-Principles,Connects the model design to first-principles math (Linear Algebra/Calculus). discusses the Loss Landscape geometry.
