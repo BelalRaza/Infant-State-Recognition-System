@@ -1,0 +1,40 @@
+{
+  "accuracy": 0.6413043478260869,
+  "macro_f1": 0.20675675675675675,
+  "weighted_f1": 0.6695799059929495,
+  "mcc": -0.044847585342325344,
+  "kappa": -0.04365761430044679,
+  "per_class": {
+    "hunger": {
+      "precision": 0.8169014084507042,
+      "recall": 0.7532467532467533,
+      "f1": 0.7837837837837838,
+      "support": 77.0
+    },
+    "belly_pain": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 3.0
+    },
+    "burping": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 2.0
+    },
+    "discomfort": {
+      "precision": 0.3333333333333333,
+      "recall": 0.2,
+      "f1": 0.25,
+      "support": 5.0
+    },
+    "tiredness": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 5.0
+    }
+  },
+  "auc_roc": 0.4535932608869455
+}

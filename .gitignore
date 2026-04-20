@@ -51,6 +51,10 @@ ML DL Project List*
 # ── Checkpoints / caches ──────────────────────────────────────────────
 checkpoints/
 
+# ── Secrets ────────────────────────────────────────────────────────────
+.env
+.env.*
+
 # ── Misc ───────────────────────────────────────────────────────────────
 *.log
 cammands.md
@@ -63,3 +67,16 @@ cammands.md
 # ── Planning / scratch docs ────────────────────────────────────────────
 deep-research-plan.md
 mldl_project_info.md
+PHASE2_HANDOFF.md
+create_phase2_colab_zip.sh
+phase_wise_prompts.html
+research/
+
+# ── LaTeX build artefacts (Phase 2 report) ─────────────────────────────
+reports/phase2_report/*.log
+reports/phase2_report/*.aux
+reports/phase2_report/*.out
+reports/phase2_report/*.toc
+reports/phase2_report/*.bbl
+reports/phase2_report/*.blg
+reports/phase2_report/*.synctex.gz

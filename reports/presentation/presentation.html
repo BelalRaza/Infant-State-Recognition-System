@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infant State Recognition System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --bg:#FFFFFF;--bg2:#F8FAFC;--bg3:#F1F5F9;
+    --tx:#0F172A;--tx2:#475569;--tx3:#94A3B8;
+    --ac:#2563EB;--ac2:#DBEAFE;--ac3:#1D4ED8;
+    --gn:#059669;--gn2:#D1FAE5;--gn3:#ECFDF5;
+    --rd:#DC2626;--rd2:#FEE2E2;
+    --or:#D97706;--or2:#FEF3C7;
+    --pu:#7C3AED;--pu2:#EDE9FE;
+    --bd:#E2E8F0;--bd2:#CBD5E1;
+    --sh:0 1px 3px rgba(15,23,42,.06);
+    --sh2:0 4px 12px rgba(15,23,42,.07);
+  }
+
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);overflow:hidden;height:100vh;-webkit-font-smoothing:antialiased}
+
+  /* ── Slides ── */
+  .slide{
+    display:none;width:100vw;height:100vh;
+    flex-direction:column;
+    position:relative;overflow-y:auto;overflow-x:hidden;
+    padding:40px 64px 72px;
+  }
+  .slide.active{display:flex}
+  /* safe vertical centering: auto-margins collapse when content overflows */
+  .slide>:first-child{margin-top:auto}
+  .slide>:last-child{margin-bottom:auto}
+
+  /* scroll styling */
+  .slide::-webkit-scrollbar{width:4px}
+  .slide::-webkit-scrollbar-track{background:transparent}
+  .slide::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
+
+  /* decorative blobs */
+  .slide::before{content:'';position:absolute;top:-100px;right:-100px;width:350px;height:350px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.05)0%,transparent 70%);pointer-events:none;z-index:0}
+  .slide::after{content:'';position:absolute;bottom:-60px;left:-60px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.03)0%,transparent 70%);pointer-events:none;z-index:0}
+  .slide>*{position:relative;z-index:1}
+
+  .dot-bg{background-image:radial-gradient(circle,#E2E8F0 1px,transparent 1px);background-size:28px 28px}
+
+  /* ── Progress ── */
+  .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--ac),var(--pu));transition:width .4s ease;z-index:200}
+
+  .slide-counter{position:fixed;bottom:20px;right:36px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tx3);font-weight:500;letter-spacing:.05em;z-index:200}
+
+  .nav-btns{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:200}
+  .nav-btn{width:36px;height:36px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);transition:all .15s}
+  .nav-btn:hover{background:var(--bg3);color:var(--tx)}
+
+  /* ── Typography ── */
+  .label{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--ac);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .label::before{content:'';width:16px;height:2px;background:var(--ac);border-radius:1px}
+
+  h1{font-family:'Sora',sans-serif;font-size:52px;font-weight:700;line-height:1.1;letter-spacing:-.03em;margin-bottom:12px}
+  h2{font-family:'Sora',sans-serif;font-size:38px;font-weight:600;line-height:1.15;letter-spacing:-.02em;margin-bottom:10px}
+  h3{font-family:'Sora',sans-serif;font-size:22px;font-weight:600;margin-bottom:6px}
+
+  .sub{font-size:19px;color:var(--tx2);line-height:1.5;max-width:800px}
+
+  /* ── Layout ── */
+  .row{display:grid;gap:32px;margin-top:20px;align-items:start}
+  .r2{grid-template-columns:1fr 1fr}
+  .r55{grid-template-columns:55fr 45fr}
+  .r45{grid-template-columns:45fr 55fr}
+  .r60{grid-template-columns:60fr 40fr}
+  .r3{grid-template-columns:1fr 1fr 1fr}
+
+  .center{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;flex:1}
+
+  .divider{width:40px;height:3px;background:linear-gradient(90deg,var(--ac),var(--pu));border-radius:2px;margin:12px 0}
+  .center .divider{margin:12px auto}
+
+  /* ── Cards ── */
+  .card{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:24px;box-shadow:var(--sh)}
+  .card h3{margin-bottom:6px}
+  .card p{font-size:16px;color:var(--tx2);line-height:1.55}
+
+  .mc{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:24px 20px;text-align:center;box-shadow:var(--sh)}
+  .mc .v{font-family:'Sora',sans-serif;font-size:42px;font-weight:700;line-height:1.1;color:var(--tx)}
+  .mc .l{font-size:13px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-top:6px;font-weight:500}
+  .mc .s{font-size:14px;color:var(--tx2);margin-top:3px}
+
+  .mc.blue{border-color:var(--ac)}.mc.blue .v{color:var(--ac)}
+  .mc.green{border-color:var(--gn);background:var(--gn3)}.mc.green .v{color:var(--gn)}
+  .mc.red{border-color:var(--rd);background:var(--rd2)}.mc.red .v{color:var(--rd)}
+  .mc.orange{border-color:var(--or);background:var(--or2)}.mc.orange .v{color:var(--or)}
+  .mc.purple{border-color:var(--pu);background:var(--pu2)}.mc.purple .v{color:var(--pu)}
+
+  .metrics{display:grid;gap:16px;margin:16px 0}
+  .m2{grid-template-columns:1fr 1fr}
+  .m3{grid-template-columns:1fr 1fr 1fr}
+  .m4{grid-template-columns:1fr 1fr 1fr 1fr}
+  .m5{grid-template-columns:1fr 1fr 1fr 1fr 1fr}
+
+  /* ── Images ── */
+  .img{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:10px;box-shadow:var(--sh);cursor:pointer;transition:box-shadow .2s}
+  .img:hover{box-shadow:var(--sh2)}
+  .img img{width:100%;border-radius:6px;display:block}
+  .img .cap{font-size:13px;color:var(--tx3);text-align:center;margin-top:8px;line-height:1.4}
+
+  /* ── Tables ── */
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:16px;margin:10px 0;border-radius:10px;overflow:hidden;border:1px solid var(--bd)}
+  thead{background:var(--bg2)}
+  th{text-align:left;padding:12px 16px;font-weight:600;color:var(--tx);font-size:13px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bd)}
+  td{padding:10px 16px;border-bottom:1px solid var(--bg3);color:var(--tx2);font-size:15px}
+  tr:last-child td{border-bottom:none}
+  tr.best td{color:var(--gn);font-weight:600;background:var(--gn3)}
+
+  /* ── Flow ── */
+  .flow{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0;flex-wrap:wrap}
+  .fi{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:18px 28px;text-align:center;box-shadow:var(--sh);min-width:140px}
+  .fi .fv{font-family:'Sora',sans-serif;font-size:32px;font-weight:700}
+  .fi .fl{font-size:13px;color:var(--tx3);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+  .fa{font-family:'Sora',sans-serif;font-size:24px;color:var(--tx3);font-weight:700}
+
+  /* ── Tags ── */
+  .tag{display:inline-block;padding:5px 14px;border-radius:6px;font-size:13px;font-weight:600;letter-spacing:.04em;font-family:'JetBrains Mono',monospace}
+  .tag-b{background:var(--ac2);color:var(--ac)}
+  .tag-g{background:var(--gn2);color:var(--gn)}
+  .tag-r{background:var(--rd2);color:var(--rd)}
+  .tag-o{background:var(--or2);color:var(--or)}
+
+  .hl{color:var(--tx);font-weight:600}
+  .hl-b{color:var(--ac);font-weight:600}
+  .hl-g{color:var(--gn);font-weight:600}
+  .hl-r{color:var(--rd);font-weight:600}
+
+  /* ── Callout ── */
+  .call{background:var(--bg2);border-left:3px solid var(--ac);border-radius:0 8px 8px 0;padding:16px 22px;margin:12px 0;font-size:16px;line-height:1.55;color:var(--tx2)}
+  .call.gn{border-left-color:var(--gn)}
+  .call.rd{border-left-color:var(--rd)}
+  .call.or{border-left-color:var(--or)}
+
+  /* ── Chips ── */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .chip{padding:7px 16px;border-radius:16px;font-size:14px;font-weight:500;border:1px solid var(--bd);background:var(--bg2);color:var(--tx2)}
+
+  /* ── Bullet list ── */
+  ul.bl{list-style:none;padding:0}
+  ul.bl li{padding:8px 0 8px 24px;position:relative;font-size:17px;line-height:1.55;color:var(--tx2)}
+  ul.bl li::before{content:'';position:absolute;left:0;top:13px;width:5px;height:5px;border-radius:50%;background:var(--ac)}
+  ul.bl li b{color:var(--tx);font-weight:600}
+
+  /* ── Title slide ── */
+  .title-bg{background:linear-gradient(135deg,#FFF 0%,#F0F4FF 50%,#EDE9FE 100%)}
+  .title-bg::before{width:500px;height:500px;top:-180px;right:-180px;background:radial-gradient(circle,rgba(37,99,235,.07)0%,transparent 60%)}
+
+  /* ── Final slide ── */
+  .final{background:linear-gradient(135deg,#0F172A 0%,#1E293B 100%)}
+  .final,.final h1,.final h2,.final p,.final .sub{color:#F1F5F9}
+  .final .mc{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+  .final .mc .l{color:#94A3B8}
+  .final .mc.green{background:rgba(5,150,105,.12);border-color:rgba(5,150,105,.3)}.final .mc.green .v{color:#34D399}
+  .final .mc.blue{background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.3)}.final .mc.blue .v{color:#60A5FA}
+  .final .divider{background:linear-gradient(90deg,#3B82F6,#8B5CF6)}
+  .final::before{background:radial-gradient(circle,rgba(59,130,246,.12)0%,transparent 60%)}
+  .final::after{background:radial-gradient(circle,rgba(124,58,237,.08)0%,transparent 60%)}
+  .final .chip{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#94A3B8}
+
+  /* ── Lightbox ── */
+  .lightbox{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,.85);z-index:500;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(4px)}
+  .lightbox.open{display:flex}
+  .lightbox img{max-width:90vw;max-height:88vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .lightbox-close{position:fixed;top:20px;right:28px;font-size:28px;color:#fff;cursor:pointer;z-index:510;font-family:'Sora',sans-serif;font-weight:300;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.1);transition:background .2s}
+  .lightbox-close:hover{background:rgba(255,255,255,.2)}
+
+  @media(max-width:1200px){
+    .slide{padding:36px 40px 72px}
+    h1{font-size:38px}h2{font-size:26px}
+    .mc .v{font-size:26px}
+    .row.r2,.row.r55,.row.r45,.row.r60{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="pb"></div>
+
+<!-- ═══════════ S1: TITLE ═══════════ -->
+<div class="slide title-bg active" id="s1">
+  <div class="center">
+    <div class="tag tag-b" style="margin-bottom:16px">PROJECT 3 &mdash; 6TH SEMESTER</div>
+    <h1 style="font-size:52px">Infant State Recognition<br>from Cry Acoustics</h1>
+    <div class="divider"></div>
+    <p class="sub" style="text-align:center">Hybrid ML + DL classification of baby cries into five states</p>
+    <div class="chips" style="margin-top:24px;justify-content:center">
+      <span class="chip">457 Recordings</span>
+      <span class="chip">5 Classes</span>
+      <span class="chip">47.8 : 1 Imbalance</span>
+      <span class="chip">Donate-a-Cry Corpus</span>
+    </div>
+    <p style="margin-top:36px;font-size:15px;color:var(--tx2);font-weight:500">Meghavi Rao (230044) &nbsp;&middot;&nbsp; Belal Raza (230094)</p>
+    <p style="font-size:12px;color:var(--tx3);margin-top:4px">Deep Learning & Advanced Machine Learning &middot; 2026</p>
+  </div>
+</div>
+
+<!-- ═══════════ S2: THE PROBLEM ═══════════ -->
+<div class="slide" id="s2">
+  <div class="label">The Problem</div>
+  <h2>Babies cry differently depending on what they need</h2>
+  <p class="sub">Five cry types, each from a distinct reflex &mdash; but the dataset is massively skewed toward hunger.</p>
+  <div class="row r2" style="margin-top:14px">
+    <div class="metrics m5">
+      <div class="mc red"><div class="v" style="font-size:22px">382</div><div class="l">Hunger</div><div class="s">83.6%</div></div>
+      <div class="mc"><div class="v" style="font-size:22px">27</div><div class="l">Discomfort</div><div class="s">5.9%</div></div>
+      <div class="mc"><div class="v" style="font-size:22px">24</div><div class="l">Tiredness</div><div class="s">5.3%</div></div>
+      <div class="mc"><div class="v" style="font-size:22px">16</div><div class="l">Belly Pain</div><div class="s">3.5%</div></div>
+      <div class="mc"><div class="v" style="font-size:22px">8</div><div class="l">Burping</div><div class="s">1.7%</div></div>
+    </div>
+    <div class="metrics m2">
+      <div class="mc red"><div class="v">47.8:1</div><div class="l">Imbalance Ratio</div><div class="s">Hunger vs Burping</div></div>
+      <div class="mc blue"><div class="v">221</div><div class="l">Unique Infants</div><div class="s">7s clips, 8 kHz</div></div>
+    </div>
+  </div>
+  <div class="call or" style="margin-top:14px">
+    <b>Core challenge:</b> A model that just predicts "hunger" for everything scores 84% accuracy. Accuracy is meaningless here &mdash; we use <b>macro-F1</b> which treats all five classes equally.
+  </div>
+</div>
+
+<!-- ═══════════ S3: DATA LEAKAGE ═══════════ -->
+<div class="slide" id="s3">
+  <div class="label">Critical Discovery</div>
+  <h2>Data leakage: when 96.5% accuracy is a lie</h2>
+  <div class="row r55" style="margin-top:14px">
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <h3 style="color:var(--rd)">The Mistake</h3>
+        <p>Augmented audio written to disk <b>before</b> splitting &rarr; near-copies in both train and test. Some infants had up to 13 recordings scattered across splits.</p>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <h3 style="color:var(--gn)">The Fix</h3>
+        <p><b>GroupShuffleSplit</b> by infant UUID &mdash; no baby in multiple splits. Augmentation only on training data, in-memory, never to disk.</p>
+      </div>
+      <div class="call rd">
+        XGBoost macro-F1 dropped from <b>0.965 to 0.178</b> &mdash; an 81.6% decrease. The original results were entirely driven by test-set contamination.
+      </div>
+    </div>
+    <div>
+      <div class="flow" style="flex-direction:column;gap:14px">
+        <div class="fi" style="border-color:var(--rd);width:100%"><div class="fv" style="color:var(--rd)">96.5%</div><div class="fl">Leaky accuracy (fake)</div></div>
+        <div class="fa">&darr; leak discovered &darr;</div>
+        <div class="fi" style="border-color:var(--or);width:100%"><div class="fv" style="color:var(--or)">17.8%</div><div class="fl">Honest XGBoost MacF1</div></div>
+        <div class="fa">&darr; best model &darr;</div>
+        <div class="fi" style="border-color:var(--gn);width:100%"><div class="fv" style="color:var(--gn)">27.0%</div><div class="fl">Honest SVM MacF1</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S4: PHASE 1 FEATURES ═══════════ -->
+<div class="slide" id="s4">
+  <div class="label">Phase 1 &mdash; Feature Engineering</div>
+  <h2>411-dimensional feature vector from six acoustic blocks</h2>
+  <div class="row r2" style="margin-top:10px">
+    <div>
+      <table>
+        <thead><tr><th>Block</th><th>What it captures</th><th>Dims</th></tr></thead>
+        <tbody>
+          <tr><td><b>MFCC</b></td><td>Spectral envelope shape</td><td>240</td></tr>
+          <tr><td><b>CQCC</b></td><td>Fine-grained harmonic structure</td><td>120</td></tr>
+          <tr><td><b>F0 Contour</b></td><td>Pitch dynamics (pain vs hunger)</td><td>7</td></tr>
+          <tr><td><b>Spectral Contrast</b></td><td>Harmonic richness</td><td>14</td></tr>
+          <tr><td><b>Chroma</b></td><td>Pitch class distribution</td><td>24</td></tr>
+          <tr><td><b>Spectral Desc.</b></td><td>ZCR, centroid, energy, etc.</td><td>6</td></tr>
+          <tr class="best"><td><b>Total</b></td><td></td><td><b>411</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:12px">
+        <h3>Why these features?</h3>
+        <p>Baby cries have three modes: <b>modal voice</b> (~400 Hz, hunger), <b>hyperphonation</b> (>1000 Hz, pain), and <b>dysphonation</b> (turbulent, distress). Our features capture all three.</p>
+      </div>
+      <div class="card">
+        <h3>Why CQCCs matter</h3>
+        <p>Constant-Q Transform gives <b>3&ndash;4x finer frequency resolution</b> in the 250&ndash;2000 Hz range where cry harmonics live, compared to standard FFT.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S5: PHASE 1 RESULTS ═══════════ -->
+<div class="slide" id="s5">
+  <div class="label">Phase 1 &mdash; Results</div>
+  <h2>Six models trained &mdash; all fail on minority classes</h2>
+  <div class="row r2" style="margin-top:10px">
+    <div>
+      <table>
+        <thead><tr><th>Model</th><th>Accuracy</th><th>Macro F1</th><th>MCC</th></tr></thead>
+        <tbody>
+          <tr class="best"><td><b>SVM (SMOTE)</b></td><td>0.815</td><td>0.270</td><td>0.216</td></tr>
+          <tr><td>Ensemble</td><td>0.837</td><td>0.249</td><td>0.155</td></tr>
+          <tr><td>Bayesian GMM</td><td>0.641</td><td>0.207</td><td>&minus;0.045</td></tr>
+          <tr><td>Random Forest</td><td>0.804</td><td>0.179</td><td>0.013</td></tr>
+          <tr><td>XGBoost</td><td>0.804</td><td>0.178</td><td>&minus;0.045</td></tr>
+          <tr><td>HMM</td><td>0.674</td><td>0.162</td><td>&minus;0.080</td></tr>
+        </tbody>
+      </table>
+      <div class="call" style="margin-top:10px">
+        Only <b>discomfort</b> gets partial recognition (F1=0.44). Belly pain, burping, tiredness: all <b class="hl-r">F1 = 0.00</b>.
+      </div>
+    </div>
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="phase1_svm_cm.png" alt="SVM CM">
+        <div class="cap">SVM confusion matrix &mdash; predicts "hunger" for nearly everything</div>
+      </div>
+      <div class="img" onclick="openLB(this)" style="margin-top:12px">
+        <img src="phase1_model_comparison.png" alt="Model comparison">
+        <div class="cap">Macro F1 comparison &mdash; all models below 0.30</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S6: THE ACCURACY TRAP ═══════════ -->
+<div class="slide dot-bg" id="s6">
+  <div class="center">
+    <div class="label" style="justify-content:center">Core Insight</div>
+    <h2 style="font-size:38px">High accuracy is meaningless under extreme imbalance</h2>
+    <div class="flow" style="margin-top:24px">
+      <div class="fi"><div class="fv" style="color:var(--gn)">81.5%</div><div class="fl">SVM Accuracy</div></div>
+      <div class="fa">but</div>
+      <div class="fi" style="border-color:var(--rd)"><div class="fv" style="color:var(--rd)">27.0%</div><div class="fl">Macro F1</div></div>
+      <div class="fa">because</div>
+      <div class="fi" style="border-color:var(--rd)"><div class="fv" style="color:var(--rd)">0.00</div><div class="fl">3/4 minority F1</div></div>
+    </div>
+    <div class="call" style="max-width:640px;margin-top:24px;text-align:left">
+      A trivial "always predict hunger" classifier gets <b>83.6% accuracy</b>. Our SVM was barely better. This is why Phase 2 was needed.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S7: PHASE 2 ARCHITECTURE ═══════════ -->
+<div class="slide" id="s7">
+  <div class="label">Phase 2 &mdash; Architecture</div>
+  <h2>CNN + BiLSTM + Temporal Attention with Domain Fusion</h2>
+  <div class="row r2" style="margin-top:10px">
+    <div>
+      <div class="card" style="margin-bottom:10px">
+        <h3 style="color:var(--ac)">Spectrogram Branch</h3>
+        <p>64-band mel-spectrogram &rarr; 2&times; Depthwise-Sep Conv + SE Attention &rarr; BiLSTM (hidden=20) &rarr; Temporal Attention &rarr; context vector</p>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <h3 style="color:var(--pu)">Domain Branch</h3>
+        <p>32 features (F0 stats, HNR, jitter, shimmer, MFCC means) &rarr; Linear + ReLU + LayerNorm</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--gn)">Fusion</h3>
+        <p>Concatenate both branches (72-dim) &rarr; MLP + Dropout(0.3) &rarr; 5-class output</p>
+      </div>
+    </div>
+    <div>
+      <div class="metrics m2">
+        <div class="mc blue"><div class="v" style="font-size:26px">16,216</div><div class="l">Student Params</div><div class="s">Edge-ready</div></div>
+        <div class="mc purple"><div class="v" style="font-size:26px">135,258</div><div class="l">Teacher Params</div><div class="s">For distillation</div></div>
+      </div>
+      <div class="call" style="margin-top:12px">
+        <b>Key idea:</b> Mel-spectrograms preserve the full time-frequency evolution that clip-level statistics compress away. The attention mechanism learns <em>which parts</em> of the cry matter most.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S8: IMBALANCE TECHNIQUES ═══════════ -->
+<div class="slide" id="s8">
+  <div class="label">Phase 2 &mdash; Imbalance Handling</div>
+  <h2>Six techniques to combat 47.8:1 imbalance</h2>
+  <div class="row r3" style="margin-top:14px">
+    <div class="card"><h3>LDAM Loss</h3><p>Class-dependent margins push decision boundaries away from minority classes</p></div>
+    <div class="card"><h3>Deferred Re-Weighting</h3><p>Uniform weights first 60 epochs, then class-balanced to adjust boundaries</p></div>
+    <div class="card"><h3>Mixup</h3><p>Blends training pairs (50% batches) to smooth decision boundary</p></div>
+    <div class="card"><h3>Augmentation</h3><p>326 &rarr; 1,920 samples (384/class): pitch, time, noise, reverb</p></div>
+    <div class="card"><h3>SpecAugment</h3><p>Random frequency + time masking on spectrograms during training</p></div>
+    <div class="card"><h3>cRT Retraining</h3><p>Freeze backbone, retrain classifier with balanced sampling (30 epochs)</p></div>
+  </div>
+  <div class="call or" style="margin-top:12px">
+    Despite all six techniques plus dropout, label smoothing, weight decay, and gradient clipping &mdash; DL alone still couldn't beat SVM.
+  </div>
+</div>
+
+<!-- ═══════════ S9: DL RESULTS ═══════════ -->
+<div class="slide" id="s9">
+  <div class="label">Phase 2 &mdash; DL Results</div>
+  <h2>Deep learning alone <span style="color:var(--rd)">could not beat SVM</span></h2>
+  <div class="row r2" style="margin-top:10px">
+    <div>
+      <table>
+        <thead><tr><th>Model</th><th>Params</th><th>MacF1</th><th>vs SVM</th></tr></thead>
+        <tbody>
+          <tr class="best"><td><b>Teacher</b></td><td>135K</td><td>0.293</td><td style="color:var(--gn)">+0.023</td></tr>
+          <tr><td>+ LDAM+DRW</td><td>12K</td><td>0.206</td><td style="color:var(--rd)">&minus;0.064</td></tr>
+          <tr><td>CNN Baseline</td><td>1.3K</td><td>0.190</td><td style="color:var(--rd)">&minus;0.080</td></tr>
+          <tr><td>Fusion+cRT</td><td>16K</td><td>0.182</td><td style="color:var(--rd)">&minus;0.088</td></tr>
+          <tr><td>CNN+BiLSTM+Attn</td><td>12K</td><td>0.145</td><td style="color:var(--rd)">&minus;0.125</td></tr>
+          <tr><td>Hierarchical</td><td>17K</td><td>0.137</td><td style="color:var(--rd)">&minus;0.133</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="fusion_training_history.png" alt="Training curves">
+        <div class="cap">Train F1 hits 0.65, val stays at 0.18 &mdash; severe overfitting</div>
+      </div>
+    </div>
+  </div>
+  <div class="call rd" style="margin-top:10px">
+    Only the 135K Teacher marginally passes SVM (0.293 vs 0.270). All 16K models perform <b>worse</b>. 326 training samples is simply too few for deep learning to learn robust representations.
+  </div>
+</div>
+
+<!-- ═══════════ S10: WHY DL FAILED ═══════════ -->
+<div class="slide" id="s10">
+  <div class="label">Analysis</div>
+  <h2>Why deep learning alone failed</h2>
+  <div class="row r55" style="margin-top:14px">
+    <div class="row" style="grid-template-columns:1fr;gap:10px;margin-top:0">
+      <div class="card"><h3 style="color:var(--rd)">1. Data scarcity</h3><p>326 originals is far too few. 8 burping samples &times; 64x augmentation = same 8 templates repeated. Can't create genuinely new patterns.</p></div>
+      <div class="card"><h3 style="color:var(--or)">2. Noisy validation</h3><p>63 val samples (51 hunger). One correct minority prediction swings F1 by 0.05&ndash;0.10. Early stopping becomes random.</p></div>
+      <div class="card"><h3 style="color:var(--pu)">3. Overfitting</h3><p>Train F1 = 0.65, Val F1 = 0.18. Six regularisation techniques weren't enough. This is a capacity-data mismatch.</p></div>
+    </div>
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="teacher_cm.png" alt="Teacher CM">
+        <div class="cap">Teacher model &mdash; some minority recognition but still hunger-biased</div>
+      </div>
+      <div class="img" onclick="openLB(this)" style="margin-top:10px">
+        <img src="cnn_baseline_cm.png" alt="CNN CM">
+        <div class="cap">CNN Baseline &mdash; collapses to majority-class prediction</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S11: HYBRID BREAKTHROUGH ═══════════ -->
+<div class="slide dot-bg" id="s11">
+  <div class="center">
+    <div class="tag tag-g" style="margin-bottom:12px">THE BREAKTHROUGH</div>
+    <h1 style="font-size:44px">Hybrid ML + DL Ensemble</h1>
+    <p class="sub" style="text-align:center;margin-top:4px">Combine SVM probabilities + DL probabilities via weighted average</p>
+    <div class="flow" style="margin-top:20px">
+      <div class="fi"><div class="fv" style="color:var(--tx3)">0.270</div><div class="fl">SVM</div></div>
+      <div class="fa">+</div>
+      <div class="fi"><div class="fv" style="color:var(--tx3)">0.182</div><div class="fl">DL</div></div>
+      <div class="fa">=</div>
+      <div class="fi" style="border-color:var(--gn);background:var(--gn3)"><div class="fv" style="color:var(--gn)">0.507</div><div class="fl">Hybrid</div></div>
+    </div>
+    <div class="metrics m3" style="max-width:560px;margin-top:20px">
+      <div class="mc green"><div class="v">92.6%</div><div class="l">Accuracy</div></div>
+      <div class="mc green"><div class="v">+87.5%</div><div class="l">Improvement</div></div>
+      <div class="mc green"><div class="v">0.520</div><div class="l">MCC</div></div>
+    </div>
+    <p style="margin-top:14px;font-size:13px;color:var(--tx3)">Weights: SVM = 0.35 &middot; DL = 0.30 &middot; RF = 0.35 (RF zeroed due to version mismatch)</p>
+  </div>
+</div>
+
+<!-- ═══════════ S12: HYBRID CMs ═══════════ -->
+<div class="slide" id="s12">
+  <div class="label">Hybrid Results</div>
+  <h2>Minority classes recognised for the first time</h2>
+  <div class="row r2" style="margin-top:12px">
+    <div class="img" onclick="openLB(this)">
+      <img src="hybrid_stacking_cm.png" alt="Stacking CM">
+      <div class="cap">Stacking (MacF1 = 0.438) &mdash; Discomfort 2/4, Tiredness 2/2, but 10 hunger errors</div>
+    </div>
+    <div class="img" onclick="openLB(this)">
+      <img src="hybrid_weighted_cm.png" alt="Weighted CM">
+      <div class="cap">Weighted (MacF1 = 0.507) &mdash; Hunger 61/61 perfect + partial minority recognition</div>
+    </div>
+  </div>
+  <div class="row r2" style="margin-top:12px">
+    <div class="call">
+      <b>Stacking:</b> Meta-classifier learns non-linear model combinations &rarr; stronger minority recall at cost of hunger accuracy
+    </div>
+    <div class="call gn">
+      <b>Weighted:</b> Preserves SVM's reliable hunger predictions while incorporating DL's minority signal &rarr; best overall balance
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S13: WHY HYBRID WORKS ═══════════ -->
+<div class="slide" id="s13">
+  <div class="label">Analysis</div>
+  <h2>Why does the hybrid work?</h2>
+  <div class="row r3" style="margin-top:14px">
+    <div class="card"><h3 style="color:var(--ac)">SVM strength</h3><p>Captures global spectral patterns on 411-dim features. Reliable on hunger, partial on discomfort.</p></div>
+    <div class="card"><h3 style="color:var(--pu)">DL strength</h3><p>Captures fine-grained temporal patterns from spectrograms that clip-level stats miss.</p></div>
+    <div class="card"><h3 style="color:var(--gn)">Fusion magic</h3><p>Weighted averaging preserves each model's high-confidence predictions while smoothing errors.</p></div>
+  </div>
+  <div class="row r2" style="margin-top:12px">
+    <div class="img" onclick="openLB(this)">
+      <img src="tsne_features.png" alt="t-SNE">
+      <div class="cap">t-SNE of 411-dim features &mdash; classes heavily overlapped, motivating hybrid approach</div>
+    </div>
+    <div class="img" onclick="openLB(this)">
+      <img src="spec_only_cm.png" alt="Spec-only CM">
+      <div class="cap">Spec-only ablation &mdash; achieves discomfort F1 = 0.40, proving spectrograms learn unique patterns</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S14: ABLATION ═══════════ -->
+<div class="slide" id="s14">
+  <div class="label">Ablation Study</div>
+  <h2>11 variants &mdash; what each component contributes</h2>
+  <div class="row r55" style="margin-top:10px">
+    <div>
+      <table style="font-size:13px">
+        <thead><tr><th>Variant</th><th>MacF1</th><th>&Delta; vs SVM</th></tr></thead>
+        <tbody>
+          <tr class="best"><td>Teacher (135K)</td><td>0.293</td><td>+0.023</td></tr>
+          <tr class="best"><td>Spec-only (12K)</td><td>0.293</td><td>+0.023</td></tr>
+          <tr><td>CNN only</td><td>0.190</td><td>&minus;0.080</td></tr>
+          <tr><td>No augmentation</td><td>0.184</td><td>&minus;0.086</td></tr>
+          <tr><td>Full model (cRT)</td><td>0.182</td><td>&minus;0.088</td></tr>
+          <tr><td>CE loss (no LDAM)</td><td>0.163</td><td>&minus;0.107</td></tr>
+          <tr><td>No attention</td><td>0.159</td><td>&minus;0.111</td></tr>
+          <tr><td>No BiLSTM</td><td>0.146</td><td>&minus;0.124</td></tr>
+          <tr><td>Hierarchical</td><td>0.137</td><td>&minus;0.133</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="ablation_comparison.png" alt="Ablation">
+        <div class="cap">Macro F1 across all ablation variants</div>
+      </div>
+      <div class="metrics m3" style="margin-top:10px">
+        <div class="mc blue"><div class="v" style="font-size:20px">&minus;20%</div><div class="l">No BiLSTM</div></div>
+        <div class="mc blue"><div class="v" style="font-size:20px">&minus;13%</div><div class="l">No Attention</div></div>
+        <div class="mc blue"><div class="v" style="font-size:20px">+12%</div><div class="l">LDAM vs CE</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S15: INTERPRETABILITY ═══════════ -->
+<div class="slide" id="s15">
+  <div class="label">Interpretability</div>
+  <h2>What the model actually learns</h2>
+  <div class="row r2" style="margin-top:12px">
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="attention_aggregate.png" alt="Attention">
+        <div class="cap">Temporal attention by class &mdash; burping peaks mid-cry, tiredness focuses early</div>
+      </div>
+    </div>
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="domain_feature_importance.png" alt="Feature importance">
+        <div class="cap">Feature importance &mdash; MFCCs 6&ndash;13 dominate, F0 contributes little</div>
+      </div>
+    </div>
+  </div>
+  <div class="row r2" style="margin-top:12px">
+    <div class="call">
+      <b>Burping</b> attention peaks at mid-cry (short explosive "Eh" reflex). <b>Tiredness</b> focuses on onset (yawn-like "Owh" reflex). Patterns match Dunstan theory.
+    </div>
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="rf_feature_importance.png" alt="RF importance">
+        <div class="cap">Phase 1 RF importance &mdash; spectral contrast ranked highest there</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S16: EDGE DEPLOYMENT ═══════════ -->
+<div class="slide" id="s16">
+  <div class="label">Edge Deployment</div>
+  <h2>Knowledge distillation + INT8 quantisation</h2>
+  <div class="metrics m4" style="margin-top:24px;max-width:800px;margin-left:auto;margin-right:auto">
+    <div class="mc blue"><div class="v" style="font-size:28px">16,216</div><div class="l">Parameters</div></div>
+    <div class="mc"><div class="v" style="font-size:28px">143.5 KB</div><div class="l">FP32 Size</div></div>
+    <div class="mc green"><div class="v" style="font-size:28px">35.9 KB</div><div class="l">INT8 Size</div><div class="s">4x compression</div></div>
+    <div class="mc green"><div class="v" style="font-size:28px">11.4 ms</div><div class="l">Inference</div><div class="s">Single CPU core</div></div>
+  </div>
+  <div class="row r2" style="margin-top:20px;max-width:800px;margin-left:auto;margin-right:auto">
+    <div class="call gn">
+      <b>600x faster</b> than real-time. Processes a 7-second clip in 11.4 ms. Viable for Raspberry Pi, phones, baby monitors.
+    </div>
+    <div class="call">
+      <b>35.9 KB</b> fits easily on ESP32 (4 MB flash). Phase 3 will deploy via TFLite Micro and ONNX.js for browser inference.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S17: FINAL COMPARISON ═══════════ -->
+<div class="slide" id="s17">
+  <div class="label">Final Comparison</div>
+  <h2>ML vs DL vs Hybrid &mdash; the complete picture</h2>
+  <table style="margin-top:16px;max-width:800px;margin-left:auto;margin-right:auto;font-size:15px">
+    <thead><tr><th></th><th>Approach</th><th>Accuracy</th><th>Macro F1</th><th>Weighted F1</th><th>MCC</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-b">A</span></td><td>ML Baseline (SVM)</td><td>0.815</td><td>0.270</td><td>0.783</td><td>0.216</td></tr>
+      <tr><td><span class="tag tag-o">B</span></td><td>DL Only (Fusion+cRT)</td><td>0.603</td><td>0.182</td><td>0.686</td><td>0.002</td></tr>
+      <tr class="best"><td><span class="tag tag-g">C</span></td><td><b>Hybrid Weighted</b></td><td><b>0.926</b></td><td><b>0.507</b></td><td><b>0.905</b></td><td><b>0.520</b></td></tr>
+    </tbody>
+  </table>
+  <div class="flow" style="margin-top:20px">
+    <div class="fi" style="border-color:var(--ac)"><div class="fv" style="color:var(--ac)">0.270</div><div class="fl">ML</div></div>
+    <div class="fa">&rarr;</div>
+    <div class="fi" style="border-color:var(--or)"><div class="fv" style="color:var(--or)">0.182</div><div class="fl">DL</div></div>
+    <div class="fa">&rarr;</div>
+    <div class="fi" style="border-color:var(--gn);background:var(--gn3)"><div class="fv" style="color:var(--gn)">0.507</div><div class="fl">Hybrid</div></div>
+  </div>
+  <div class="call gn" style="margin-top:14px;max-width:700px;margin-left:auto;margin-right:auto;text-align:center">
+    <b>87.5% improvement</b> &mdash; hybrid wins on every metric. Complementary features beat deeper models.
+  </div>
+</div>
+
+<!-- ═══════════ S18: TAKEAWAYS ═══════════ -->
+<div class="slide" id="s18">
+  <div class="label">Key Takeaways</div>
+  <h2>Three lessons from this project</h2>
+  <div class="row" style="grid-template-columns:1fr;gap:12px;margin-top:18px;max-width:800px">
+    <div class="card" style="border-left:4px solid var(--ac);padding-left:24px">
+      <h3 style="color:var(--ac)">1. Data integrity first</h3>
+      <p>GroupShuffleSplit dropped us from 96.5% to 27.0% &mdash; painful but honest. Without this, everything downstream would be built on a lie.</p>
+    </div>
+    <div class="card" style="border-left:4px solid var(--rd);padding-left:24px">
+      <h3 style="color:var(--rd)">2. DL is not a silver bullet</h3>
+      <p>With 457 samples and 48:1 imbalance, every DL model underperformed a simple SVM. No architecture overcomes 8 training samples.</p>
+    </div>
+    <div class="card" style="border-left:4px solid var(--gn);padding-left:24px">
+      <h3 style="color:var(--gn)">3. Combine strengths, don't replace</h3>
+      <p>Hybrid ensemble achieved +87.5% because SVM and DL make complementary errors. Diverse signals beat deeper models.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S19: LIMITATIONS ═══════════ -->
+<div class="slide" id="s19">
+  <div class="label">Honest Assessment</div>
+  <h2>Limitations and future work</h2>
+  <div class="row r2" style="margin-top:14px">
+    <div>
+      <h3>Current Limitations</h3>
+      <div class="card" style="margin-bottom:8px"><p><b>Tiny test set:</b> 68 samples, 0 belly pain, 1 burping &mdash; per-class stats are noisy</p></div>
+      <div class="card" style="margin-bottom:8px"><p><b>Single corpus:</b> Results specific to Donate-a-Cry. Cross-corpus validation needed</p></div>
+      <div class="card" style="margin-bottom:8px"><p><b>Broken RF:</b> Scikit-learn version mismatch zeroed RF's contribution to hybrid</p></div>
+      <div class="card"><p><b>No transfer learning:</b> AudioMAE / YAMNet pretraining could help significantly</p></div>
+    </div>
+    <div>
+      <h3>Phase 3 Roadmap</h3>
+      <div class="card" style="margin-bottom:8px"><p><b>Self-supervised pretraining</b> on large-scale audio data for robust representations</p></div>
+      <div class="card" style="margin-bottom:8px"><p><b>Edge deployment:</b> TFLite Micro on ESP32 + ONNX.js for browser inference</p></div>
+      <div class="card" style="margin-bottom:8px"><p><b>Better fusion:</b> Cross-validated stacking, per-sample attention weights</p></div>
+      <div class="card"><p><b>More data:</b> Multi-site collection + cross-corpus evaluation</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S20: THANK YOU ═══════════ -->
+<div class="slide final" id="s20">
+  <div class="center">
+    <h1 style="font-size:52px">Thank You</h1>
+    <div class="divider"></div>
+    <div class="metrics m3" style="max-width:560px;margin-top:24px">
+      <div class="mc green"><div class="v">0.507</div><div class="l">Macro F1</div></div>
+      <div class="mc green"><div class="v">+87.5%</div><div class="l">Improvement</div></div>
+      <div class="mc blue"><div class="v">35.9 KB</div><div class="l">Edge-Ready</div></div>
+    </div>
+    <div class="chips" style="margin-top:28px;justify-content:center">
+      <span class="chip">411-dim Features</span>
+      <span class="chip">CNN+BiLSTM+Attention</span>
+      <span class="chip">LDAM + DRW</span>
+      <span class="chip">Hybrid Ensemble</span>
+    </div>
+    <p style="margin-top:32px;font-size:14px;color:#94A3B8">Meghavi Rao (230044) &middot; Belal Raza (230094)</p>
+    <p style="font-size:12px;color:#64748B;margin-top:4px">6th Semester &middot; Project 3 &middot; 2026</p>
+  </div>
+</div>
+
+<!-- ═══════════ LIGHTBOX ═══════════ -->
+<div class="lightbox" id="lb" onclick="closeLB()">
+  <div class="lightbox-close" onclick="closeLB()">&times;</div>
+  <img id="lbImg" src="" alt="Enlarged view">
+</div>
+
+<!-- ═══════════ UI ═══════════ -->
+<div class="slide-counter" id="sc">1 / 20</div>
+<div class="nav-btns">
+  <button class="nav-btn" id="bp" aria-label="Previous">&#8592;</button>
+  <button class="nav-btn" id="bn" aria-label="Next">&#8594;</button>
+</div>
+
+<script>
+(function(){
+  var S=document.querySelectorAll('.slide'),T=S.length,C=0;
+  for(var i=0;i<T;i++){S[i].style.display=i===0?'flex':'none';if(i===0)S[i].classList.add('active');else S[i].classList.remove('active')}
+  upd();
+
+  function go(n){if(n<0||n>=T||n===C)return;S[C].style.display='none';S[C].classList.remove('active');C=n;S[C].style.display='flex';S[C].classList.add('active');S[C].scrollTop=0;upd()}
+  function upd(){document.getElementById('sc').textContent=(C+1)+' / '+T;document.getElementById('pb').style.width=((C+1)/T*100)+'%'}
+
+  document.addEventListener('keydown',function(e){
+    if(document.getElementById('lb').classList.contains('open')){if(e.key==='Escape')closeLB();return}
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();go(C+1)}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go(C-1)}
+    else if(e.key===' '){e.preventDefault();go(C+1)}
+    else if(e.key==='Home'){e.preventDefault();go(0)}
+    else if(e.key==='End'){e.preventDefault();go(T-1)}
+  });
+
+  // Prevent scroll from changing slides
+  for(var j=0;j<T;j++){
+    S[j].addEventListener('wheel',function(e){
+      var el=this;
+      var atTop=el.scrollTop===0;
+      var atBot=el.scrollTop+el.clientHeight>=el.scrollHeight-2;
+      if(el.scrollHeight>el.clientHeight){
+        if((e.deltaY<0&&atTop)||(e.deltaY>0&&atBot)){e.preventDefault()}
+      } else {e.preventDefault()}
+    },{passive:false});
+  }
+
+  document.getElementById('bp').addEventListener('click',function(e){e.stopPropagation();go(C-1)});
+  document.getElementById('bn').addEventListener('click',function(e){e.stopPropagation();go(C+1)});
+
+  // Lightbox
+  window.openLB=function(el){
+    var img=el.querySelector('img');if(!img)return;
+    document.getElementById('lbImg').src=img.src;
+    document.getElementById('lb').classList.add('open');
+  };
+  window.closeLB=function(){document.getElementById('lb').classList.remove('open')};
+})();
+</script>
+
+</body>
+</html>
