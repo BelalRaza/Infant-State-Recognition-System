@@ -1,21 +1,21 @@
 <div align="center">
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=161b22&height=220&section=header&text=Infant%20State%20Recognition&fontSize=40&fontColor=ffffff&animation=fadeIn&fontAlignY=30&desc=Audio%20Classification%20System&descSize=16&descAlignY=52&descColor=8b949e" />
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0F766E&height=220&section=header&text=Infant%20State%20Recognition&fontSize=40&fontColor=ffffff&animation=fadeIn&fontAlignY=30&desc=Audio%20Classification%20System&descSize=16&descAlignY=52&descColor=2DD4BF" />
 
 <br>
 
 <a href="https://git.io/typing-svg">
-  <img src="https://readme-typing-svg.demolab.com/?lines=Decoding+infant+cries+through+audio+intelligence;411+acoustic+features+%C2%B7+6+ML+models+%C2%B7+CNN%2BBiLSTM;Hybrid+ensemble+%E2%80%94+87%25+improvement+over+baseline;Edge+ready+%E2%80%94+35.9+KB+INT8+quantized+model&font=Fira+Code&center=true&width=680&height=35&color=c9d1d9&vCenter=true&pause=1200&size=14&duration=3500" />
+  <img src="https://readme-typing-svg.demolab.com/?lines=Decoding+infant+cries+through+audio+intelligence;411+acoustic+features+%C2%B7+6+ML+models+%C2%B7+CNN%2BBiLSTM;Hybrid+ensemble+%E2%80%94+87%25+improvement+over+baseline;Edge+ready+%E2%80%94+35.9+KB+INT8+quantized+model&font=Fira+Code&center=true&width=680&height=35&color=2DD4BF&vCenter=true&pause=1200&size=14&duration=3500" />
 </a>
 
 <br>
 <br>
 
-![](https://img.shields.io/badge/Python_3.10-c9d1d9?style=flat-square)&nbsp;&nbsp;
-![](https://img.shields.io/badge/Phase_2_Complete-c9d1d9?style=flat-square)&nbsp;&nbsp;
-![](https://img.shields.io/badge/457_Audio_Samples-c9d1d9?style=flat-square)&nbsp;&nbsp;
-![](https://img.shields.io/badge/5_Cry_Categories-c9d1d9?style=flat-square)&nbsp;&nbsp;
-![](https://img.shields.io/badge/Academic_Project-c9d1d9?style=flat-square)
+![](https://img.shields.io/badge/Python_3.10-0F766E?style=flat-square)&nbsp;&nbsp;
+![](https://img.shields.io/badge/Phase_2_Complete-0F766E?style=flat-square)&nbsp;&nbsp;
+![](https://img.shields.io/badge/457_Audio_Samples-0F766E?style=flat-square)&nbsp;&nbsp;
+![](https://img.shields.io/badge/5_Cry_Categories-0F766E?style=flat-square)&nbsp;&nbsp;
+![](https://img.shields.io/badge/Academic_Project-0F766E?style=flat-square)
 
 <br>
 <br>
@@ -220,17 +220,17 @@ Initial Phase 1 results (XGBoost: 96.5% accuracy) were inflated by data leakage 
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/python-c9d1d9?style=for-the-badge&logo=python&logoColor=161b22)&nbsp;
-![PyTorch](https://img.shields.io/badge/pytorch-c9d1d9?style=for-the-badge&logo=pytorch&logoColor=161b22)&nbsp;
-![scikit-learn](https://img.shields.io/badge/scikit--learn-c9d1d9?style=for-the-badge&logo=scikitlearn&logoColor=161b22)&nbsp;
-![NumPy](https://img.shields.io/badge/numpy-c9d1d9?style=for-the-badge&logo=numpy&logoColor=161b22)&nbsp;
-![Pandas](https://img.shields.io/badge/pandas-c9d1d9?style=for-the-badge&logo=pandas&logoColor=161b22)
+![Python](https://img.shields.io/badge/python-0F766E?style=for-the-badge&logo=python&logoColor=ffffff)&nbsp;
+![PyTorch](https://img.shields.io/badge/pytorch-0F766E?style=for-the-badge&logo=pytorch&logoColor=ffffff)&nbsp;
+![scikit-learn](https://img.shields.io/badge/scikit--learn-0F766E?style=for-the-badge&logo=scikitlearn&logoColor=ffffff)&nbsp;
+![NumPy](https://img.shields.io/badge/numpy-0F766E?style=for-the-badge&logo=numpy&logoColor=ffffff)&nbsp;
+![Pandas](https://img.shields.io/badge/pandas-0F766E?style=for-the-badge&logo=pandas&logoColor=ffffff)
 
-![Jupyter](https://img.shields.io/badge/jupyter-c9d1d9?style=for-the-badge&logo=jupyter&logoColor=161b22)&nbsp;
-![Google Colab](https://img.shields.io/badge/google_colab-c9d1d9?style=for-the-badge&logo=googlecolab&logoColor=161b22)&nbsp;
-![XGBoost](https://img.shields.io/badge/xgboost-c9d1d9?style=for-the-badge)&nbsp;
-![Librosa](https://img.shields.io/badge/librosa-c9d1d9?style=for-the-badge)&nbsp;
-![Matplotlib](https://img.shields.io/badge/matplotlib-c9d1d9?style=for-the-badge)
+![Jupyter](https://img.shields.io/badge/jupyter-0F766E?style=for-the-badge&logo=jupyter&logoColor=ffffff)&nbsp;
+![Google Colab](https://img.shields.io/badge/google_colab-0F766E?style=for-the-badge&logo=googlecolab&logoColor=ffffff)&nbsp;
+![XGBoost](https://img.shields.io/badge/xgboost-0F766E?style=for-the-badge)&nbsp;
+![Librosa](https://img.shields.io/badge/librosa-0F766E?style=for-the-badge)&nbsp;
+![Matplotlib](https://img.shields.io/badge/matplotlib-0F766E?style=for-the-badge)
 
 </div>
 
@@ -369,4 +369,4 @@ Upload `notebooks/Phase1_Classical_ML.ipynb` or `notebooks/Phase2_Deep_Learning.
 
 </div>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=161b22&height=120&section=footer" />
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0F766E&height=120&section=footer" />
