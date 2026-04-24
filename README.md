@@ -41,7 +41,7 @@ Infant cries encode critical information about a baby's needs, but distinguishin
 <div align="center">
 
 | Category | Samples | Share |
-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|
+|:---------|:-------:|:-----:|
 | Hunger | 382 | 83.6% |
 | Discomfort | 27 | 5.9% |
 | Tiredness | 24 | 5.2% |
@@ -69,7 +69,7 @@ A three-phase approach that progressively builds from classical signal processin
 <div align="center">
 
 | Phase | Approach | Input | Best Macro-F1 |
-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-:|
+|:-----:|:---------|:------|:-------------:|
 | **1** | Classical ML — 411 features, 6 models | Handcrafted acoustic features | 0.270 |
 | **2** | Deep Learning — CNN + BiLSTM + Attention | 64-band mel-spectrogram | 0.293 |
 | **2** | **Hybrid Ensemble — ML + DL fusion** | Probability outputs | **0.507** |
@@ -92,7 +92,7 @@ The Phase 1 pipeline extracts **411 acoustic features** per audio clip, capturin
 <div align="center">
 
 | Component | Method | Dimensions |
-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-:|
+|:----------|:-------|:----------:|
 | MFCC | 40 coefficients x 6 statistics | 240 |
 | CQCC | 20 coefficients x 6 statistics | 120 |
 | Pitch (F0) | pYIN algorithm, 7 statistics | 7 |
@@ -122,7 +122,7 @@ All audio is processed at native **8,000 Hz** (no upsampling) and normalized to 
 <div align="center">
 
 | Model | Strategy | Library |
-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-|
+|:------|:---------|:-------|
 | GMM | Density-based generative (one GMM per class) | scikit-learn |
 | SVM | SMOTE + One-vs-One + grid search | scikit-learn |
 | HMM | Left-right topology, 8 states | hmmlearn |
@@ -166,7 +166,7 @@ The deep learning pipeline introduces a **CNN + BiLSTM + Temporal Attention** ar
 <div align="center">
 
 | Model | Accuracy | Macro F1 | MCC | AUC-ROC |
-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-:|
+|:------|:--------:|:--------:|:---:|:-------:|
 | **SVM (SMOTE)** | 0.815 | **0.270** | 0.216 | 0.707 |
 | Stacking Ensemble | 0.837 | 0.249 | 0.155 | 0.599 |
 | GMM | 0.641 | 0.207 | -0.045 | 0.454 |
@@ -187,7 +187,7 @@ The deep learning pipeline introduces a **CNN + BiLSTM + Temporal Attention** ar
 <div align="center">
 
 | Approach | Accuracy | Macro F1 | Weighted F1 | MCC |
-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />:|
+|:---------|:--------:|:--------:|:-----------:|:---:|
 | ML Baseline (SVM) | 0.815 | 0.270 | 0.783 | 0.216 |
 | DL Only (Fusion + cRT) | 0.603 | 0.182 | 0.686 | 0.002 |
 | **Hybrid Weighted** | **0.926** | **0.507** | **0.905** | **0.520** |
