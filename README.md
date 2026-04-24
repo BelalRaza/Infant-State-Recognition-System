@@ -28,11 +28,11 @@
 
 </div>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
-## The Challenge
+## <img src="https://img.shields.io/badge/01-0F766E?style=flat-square" height="24" /> &nbsp; The Challenge
 
 Infant cries encode critical information about a baby's needs, but distinguishing between cry types is challenging — even for experienced caregivers. This project tackles the problem computationally, classifying cries into five categories defined by the **Dunstan Baby Language** framework.
 
@@ -41,7 +41,7 @@ Infant cries encode critical information about a baby's needs, but distinguishin
 <div align="center">
 
 | Category | Samples | Share |
-|:---------|:-------:|:-----:|
+|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|
 | Hunger | 382 | 83.6% |
 | Discomfort | 27 | 5.9% |
 | Tiredness | 24 | 5.2% |
@@ -56,11 +56,11 @@ Infant cries encode critical information about a baby's needs, but distinguishin
 
 <br>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
-## Methodology
+## <img src="https://img.shields.io/badge/02-0F766E?style=flat-square" height="24" /> &nbsp; Methodology
 
 A three-phase approach that progressively builds from classical signal processing to neural architectures, culminating in a hybrid system that outperforms either approach alone.
 
@@ -69,7 +69,7 @@ A three-phase approach that progressively builds from classical signal processin
 <div align="center">
 
 | Phase | Approach | Input | Best Macro-F1 |
-|:-----:|:---------|:------|:-------------:|
+|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-:|
 | **1** | Classical ML — 411 features, 6 models | Handcrafted acoustic features | 0.270 |
 | **2** | Deep Learning — CNN + BiLSTM + Attention | 64-band mel-spectrogram | 0.293 |
 | **2** | **Hybrid Ensemble — ML + DL fusion** | Probability outputs | **0.507** |
@@ -79,11 +79,11 @@ A three-phase approach that progressively builds from classical signal processin
 
 <br>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
-## Feature Engineering
+## <img src="https://img.shields.io/badge/03-0F766E?style=flat-square" height="24" /> &nbsp; Feature Engineering
 
 The Phase 1 pipeline extracts **411 acoustic features** per audio clip, capturing spectral, temporal, and tonal characteristics of infant cries.
 
@@ -92,7 +92,7 @@ The Phase 1 pipeline extracts **411 acoustic features** per audio clip, capturin
 <div align="center">
 
 | Component | Method | Dimensions |
-|:----------|:-------|:----------:|
+|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-:|
 | MFCC | 40 coefficients x 6 statistics | 240 |
 | CQCC | 20 coefficients x 6 statistics | 120 |
 | Pitch (F0) | pYIN algorithm, 7 statistics | 7 |
@@ -109,11 +109,11 @@ All audio is processed at native **8,000 Hz** (no upsampling) and normalized to 
 
 <br>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
-## Models
+## <img src="https://img.shields.io/badge/04-0F766E?style=flat-square" height="24" /> &nbsp; Models
 
 ### Phase 1 — Classical ML
 
@@ -122,7 +122,7 @@ All audio is processed at native **8,000 Hz** (no upsampling) and normalized to 
 <div align="center">
 
 | Model | Strategy | Library |
-|:------|:---------|:-------|
+|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-|
 | GMM | Density-based generative (one GMM per class) | scikit-learn |
 | SVM | SMOTE + One-vs-One + grid search | scikit-learn |
 | HMM | Left-right topology, 8 states | hmmlearn |
@@ -151,11 +151,11 @@ The deep learning pipeline introduces a **CNN + BiLSTM + Temporal Attention** ar
 
 <br>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
-## Results
+## <img src="https://img.shields.io/badge/05-0F766E?style=flat-square" height="24" /> &nbsp; Results
 
 ### Phase 1 — Classical ML Baseline
 
@@ -166,7 +166,7 @@ The deep learning pipeline introduces a **CNN + BiLSTM + Temporal Attention** ar
 <div align="center">
 
 | Model | Accuracy | Macro F1 | MCC | AUC-ROC |
-|:------|:--------:|:--------:|:---:|:-------:|
+|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />-:|
 | **SVM (SMOTE)** | 0.815 | **0.270** | 0.216 | 0.707 |
 | Stacking Ensemble | 0.837 | 0.249 | 0.155 | 0.599 |
 | GMM | 0.641 | 0.207 | -0.045 | 0.454 |
@@ -187,7 +187,7 @@ The deep learning pipeline introduces a **CNN + BiLSTM + Temporal Attention** ar
 <div align="center">
 
 | Approach | Accuracy | Macro F1 | Weighted F1 | MCC |
-|:---------|:--------:|:--------:|:-----------:|:---:|
+|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" /><img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />--:|:<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />:|
 | ML Baseline (SVM) | 0.815 | 0.270 | 0.783 | 0.216 |
 | DL Only (Fusion + cRT) | 0.603 | 0.182 | 0.686 | 0.002 |
 | **Hybrid Weighted** | **0.926** | **0.507** | **0.905** | **0.520** |
@@ -210,11 +210,11 @@ Initial Phase 1 results (XGBoost: 96.5% accuracy) were inflated by data leakage 
 
 <br>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
-## Tech Stack
+## <img src="https://img.shields.io/badge/06-0F766E?style=flat-square" height="24" /> &nbsp; Tech Stack
 
 <br>
 
@@ -236,12 +236,12 @@ Initial Phase 1 results (XGBoost: 96.5% accuracy) were inflated by data leakage 
 
 <br>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
 <details>
-<summary><h2>Project Structure</h2></summary>
+<summary><h2><img src="https://img.shields.io/badge/07-0F766E?style=flat-square" height="24" /> &nbsp; Project Structure</h2></summary>
 <br>
 
 ```
@@ -307,11 +307,11 @@ Infant-State-Recognition-System/
 
 <br>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
-## Getting Started
+## <img src="https://img.shields.io/badge/08-0F766E?style=flat-square" height="24" /> &nbsp; Getting Started
 
 ```bash
 # Clone
@@ -343,11 +343,11 @@ Upload `notebooks/Phase1_Classical_ML.ipynb` or `notebooks/Phase2_Deep_Learning.
 
 <br>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
-## References
+## <img src="https://img.shields.io/badge/09-0F766E?style=flat-square" height="24" /> &nbsp; References
 
 1. Dunstan, P. (2006). *Dunstan Baby Language* — five universal cry categories.
 2. Ji, C. et al. (2021). A review of infant cry analysis and classification. *EURASIP Journal on Audio, Speech, and Music Processing.*
@@ -356,7 +356,7 @@ Upload `notebooks/Phase1_Classical_ML.ipynb` or `notebooks/Phase2_Deep_Learning.
 
 <br>
 
----
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
 
 <br>
 
