@@ -199,8 +199,8 @@
     <div class="card">
       <div class="tag tag-g" style="margin-bottom:8px">PHASE 3</div>
       <h3>Pretrained foundations + edge</h3>
-      <p>AST + Whisper + handcrafted &rarr; RBF SVM teacher, distilled into EfficientAT MobileNets.</p>
-      <div class="mc green" style="margin-top:14px"><div class="v">0.6566</div><div class="l">Macro F1 (5-seed mean)</div></div>
+      <p>AST + Whisper + handcrafted &rarr; multi-teacher ensemble, distilled into EfficientAT MobileNets.</p>
+      <div class="mc green" style="margin-top:14px"><div class="v">0.7159</div><div class="l">mn10_as edge Macro F1</div><div class="s">99.9% teacher retention</div></div>
     </div>
   </div>
   <div class="call gn" style="margin-top:18px">
@@ -223,12 +223,12 @@
       <div class="metrics m2">
         <div class="mc red"><div class="v">0.270</div><div class="l">Phase 1</div><div class="s">SVM + SMOTE</div></div>
         <div class="mc orange"><div class="v">0.507</div><div class="l">Phase 2</div><div class="s">Hybrid ensemble</div></div>
-        <div class="mc green"><div class="v">0.657</div><div class="l">Phase 3 teacher</div><div class="s">5-seed mean &plusmn; 0.048</div></div>
-        <div class="mc blue"><div class="v">0.749</div><div class="l">Phase 3 best fold</div><div class="s">single best seed</div></div>
+        <div class="mc green"><div class="v">0.657</div><div class="l">Phase 3 fixed teacher</div><div class="s">5-seed mean &plusmn; 0.048</div></div>
+        <div class="mc blue"><div class="v">0.716</div><div class="l">Final edge student</div><div class="s">mn10_as, 3-seed mean</div></div>
       </div>
       <div class="call gn">
-        <b>+143%</b> relative improvement over Phase 1.
-        <b>+30%</b> relative improvement over Phase 2.
+        <b>+143%</b> relative improvement for the fixed Phase 2A teacher, and
+        <b>+41%</b> relative improvement for the final mn10_as edge student over Phase 2.
       </div>
     </div>
   </div>
@@ -462,8 +462,8 @@
       <h3>Student: EfficientAT MobileNetV3</h3>
       <p>Audio CNNs from <code>fschmid56/EfficientAT</code>, AudioSet-pretrained, distilled from PaSST transformers.</p>
       <div class="metrics m2" style="margin-top:14px">
-        <div class="mc blue"><div class="v">4.88M</div><div class="l">mn10_as params</div><div class="s">phone / RPi class</div></div>
-        <div class="mc purple"><div class="v">0.98M</div><div class="l">mn04_as params</div><div class="s">microcontroller class</div></div>
+        <div class="mc blue"><div class="v">4.21M</div><div class="l">mn10_as params</div><div class="s">phone / RPi class</div></div>
+        <div class="mc purple"><div class="v">0.72M</div><div class="l">mn04_as params</div><div class="s">ultra-small class</div></div>
       </div>
     </div>
   </div>
@@ -510,17 +510,17 @@
   <div class="row r45" style="margin-top:14px">
     <div>
       <div class="img" onclick="openLB(this)">
-        <img src="../phase3_report/figures/edge_target_overview.png" alt="Edge target overview">
-        <div class="cap">Footprint comparison: teacher vs.&nbsp;mn10_as vs.&nbsp;mn04_as on params, INT8 size, macro-F1, and CPU latency.</div>
+        <img src="../phase3_report/figures/edge_actual_results.png" alt="Actual edge distillation results">
+        <div class="cap">Actual edge results: teacher vs.&nbsp;mn10_as vs.&nbsp;mn04_as on macro-F1, footprint, retention, and latency.</div>
       </div>
     </div>
     <div>
       <table>
         <thead><tr><th>Model</th><th>Params</th><th>INT8 size</th><th>CPU latency</th></tr></thead>
         <tbody>
-          <tr><td>Phase 3 teacher</td><td>~125M</td><td>n/a</td><td>~1.2s</td></tr>
-          <tr class="best"><td><b>mn10_as student</b></td><td><b>4.88M</b></td><td>~5 MB</td><td>~8&ndash;12 ms</td></tr>
-          <tr class="best"><td><b>mn04_as student</b></td><td><b>0.98M</b></td><td>~1 MB</td><td>~3&ndash;5 ms</td></tr>
+          <tr><td>Multi-teacher ensemble</td><td>heavy</td><td>n/a</td><td>n/a</td></tr>
+          <tr class="best"><td><b>mn10_as student</b></td><td><b>4.21M</b></td><td>8.62 MB</td><td>79.2 ms</td></tr>
+          <tr class="best"><td><b>mn04_as student</b></td><td><b>0.72M</b></td><td>1.65 MB</td><td>44.1 ms</td></tr>
         </tbody>
       </table>
       <div class="call gn" style="margin-top:14px">
@@ -530,33 +530,33 @@
   </div>
 </div>
 
-<!-- ═══════════ S15: EDGE EXPECTED RESULTS ═══════════ -->
+<!-- ═══════════ S15: EDGE ACTUAL RESULTS ═══════════ -->
 <div class="slide" id="s15">
-  <div class="label">Phase 3 &mdash; Expected Edge Results</div>
-  <h2>What the distilled students are expected to deliver</h2>
-  <p class="sub">Numbers below are the conservative target band based on the design of the distillation pipeline. Final per-seed numbers will be filled in from the Colab run.</p>
+  <div class="label">Phase 3 &mdash; Actual Edge Results</div>
+  <h2>The student almost exactly matched the teacher</h2>
+  <p class="sub">Final Colab run: 3 seeds, 20 epochs, batch size 32, same repeated-split protocol as the teacher.</p>
   <div class="row r2" style="margin-top:18px">
     <div class="card">
-      <h3>mn10_as &mdash; phone / RPi class</h3>
+      <h3>mn10_as &mdash; final best edge model</h3>
       <div class="metrics m2" style="margin-top:14px">
-        <div class="mc green"><div class="v">~0.55&ndash;0.62</div><div class="l">Macro-F1 target</div><div class="s">~85&ndash;95% of teacher</div></div>
-        <div class="mc blue"><div class="v">~5 MB</div><div class="l">INT8 size</div></div>
-        <div class="mc purple"><div class="v">~8&ndash;12 ms</div><div class="l">CPU latency, batch 1</div></div>
-        <div class="mc orange"><div class="v">4.88M</div><div class="l">Parameters</div></div>
+        <div class="mc green"><div class="v">0.7159</div><div class="l">Macro-F1</div><div class="s">&plusmn; 0.0403</div></div>
+        <div class="mc blue"><div class="v">99.9%</div><div class="l">Teacher retention</div><div class="s">teacher: 0.7168</div></div>
+        <div class="mc purple"><div class="v">8.62 MB</div><div class="l">INT8 size</div></div>
+        <div class="mc orange"><div class="v">79.2 ms</div><div class="l">CPU INT8 latency</div></div>
       </div>
     </div>
     <div class="card">
-      <h3>mn04_as &mdash; microcontroller class</h3>
+      <h3>mn04_as &mdash; ultra-small model</h3>
       <div class="metrics m2" style="margin-top:14px">
-        <div class="mc green"><div class="v">~0.48&ndash;0.56</div><div class="l">Macro-F1 target</div><div class="s">~75&ndash;85% of teacher</div></div>
-        <div class="mc blue"><div class="v">~1 MB</div><div class="l">INT8 size</div></div>
-        <div class="mc purple"><div class="v">~3&ndash;5 ms</div><div class="l">CPU latency, batch 1</div></div>
-        <div class="mc orange"><div class="v">0.98M</div><div class="l">Parameters</div></div>
+        <div class="mc green"><div class="v">0.6500</div><div class="l">Macro-F1</div><div class="s">&plusmn; 0.0390</div></div>
+        <div class="mc blue"><div class="v">90.7%</div><div class="l">Teacher retention</div></div>
+        <div class="mc purple"><div class="v">1.65 MB</div><div class="l">INT8 size</div></div>
+        <div class="mc orange"><div class="v">44.1 ms</div><div class="l">CPU INT8 latency</div></div>
       </div>
     </div>
   </div>
-  <div class="call or" style="margin-top:14px">
-    <b>Why a band, not a point:</b> the Colab run reports 5-seed mean&plusmn;std using the same protocol as the teacher. We commit to a methodology, not a hand-tuned single seed.
+  <div class="call gn" style="margin-top:14px">
+    <b>Main result:</b> mn10_as retained <b>99.9%</b> of teacher macro-F1 while replacing the full AST + Whisper + SVM runtime with one compact audio CNN.
   </div>
 </div>
 
@@ -658,7 +658,7 @@
         <li><b>Belly pain (n=34) and burping (n=26)</b> remain the macro-F1 ceiling.</li>
         <li><b>5-seed mean&plusmn;std</b> is over splits, not over independent recording sites.</li>
         <li><b>No end-to-end AST fine-tune</b> on the 5-class task &mdash; deliberately, to keep variance low.</li>
-        <li><b>Edge results</b> are reported as a methodology + target band; final single-seed best will be added from the Colab run.</li>
+        <li><b>Edge results</b> are 3-seed rather than 5-seed because of deadline constraints, but use the same repeated-split protocol.</li>
       </ul>
     </div>
     <div>
@@ -677,14 +677,14 @@
 <div class="slide final" id="s20">
   <div class="center">
     <div class="tag tag-p" style="margin-bottom:16px;background:rgba(124,58,237,.18);color:#A78BFA;border:1px solid rgba(124,58,237,.3)">PHASE 3 &mdash; SHIPPED</div>
-    <h1 style="font-size:48px">From 0.270 to 0.657 macro-F1<br>and onto the edge</h1>
+    <h1 style="font-size:48px">From 0.270 to 0.716 macro-F1<br>and onto the edge</h1>
     <div class="divider"></div>
-    <p class="sub" style="text-align:center;max-width:760px">Phase 3 takes a college-project cry classifier from a leaky 0.270 baseline to a deduplicated, multi-source, foundation-model-powered teacher at 0.6566 macro-F1, and packages it as an EfficientAT MobileNet student ready for hospitals, clinics, and home monitors.</p>
+    <p class="sub" style="text-align:center;max-width:760px">Phase 3 takes a college-project cry classifier from a leaky 0.270 baseline to a deduplicated foundation-model teacher, then distils it into an EfficientAT mn10_as edge student at 0.7159 macro-F1 with 99.9% teacher retention.</p>
     <div class="metrics m4" style="margin-top:36px;width:100%;max-width:900px">
-      <div class="mc green"><div class="v">0.6566</div><div class="l">Phase 3 macro-F1</div><div class="s">5-seed &plusmn; 0.048</div></div>
-      <div class="mc blue"><div class="v">+30%</div><div class="l">Over Phase 2</div></div>
-      <div class="mc purple"><div class="v">0.98M&ndash;4.88M</div><div class="l">Edge params</div></div>
-      <div class="mc green"><div class="v">~3&ndash;12 ms</div><div class="l">CPU latency</div></div>
+      <div class="mc green"><div class="v">0.7159</div><div class="l">mn10_as macro-F1</div><div class="s">&plusmn; 0.0403</div></div>
+      <div class="mc blue"><div class="v">99.9%</div><div class="l">Teacher retention</div></div>
+      <div class="mc purple"><div class="v">1.65&ndash;8.62 MB</div><div class="l">INT8 size</div></div>
+      <div class="mc green"><div class="v">44&ndash;79 ms</div><div class="l">CPU latency</div></div>
     </div>
     <div class="chips" style="margin-top:28px;justify-content:center">
       <span class="chip">AST</span>

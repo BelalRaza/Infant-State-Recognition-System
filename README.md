@@ -5,7 +5,7 @@
 <br>
 
 <a href="https://git.io/typing-svg">
-  <img src="https://readme-typing-svg.demolab.com/?lines=From+0.270+%E2%86%92+0.507+%E2%86%92+0.6566+macro-F1;Pretrained+AST+%2B+Whisper+%2B+handcrafted+features;Distilled+into+EfficientAT+MobileNetV3+%E2%80%94+0.98M+to+4.88M+params;Edge-ready+%E2%80%94+INT8%2C+~3+ms+CPU+latency&font=Fira+Code&center=true&width=720&height=36&color=2DD4BF&vCenter=true&pause=1400&size=14&duration=3500" />
+  <img src="https://readme-typing-svg.demolab.com/?lines=From+0.270+%E2%86%92+0.507+%E2%86%92+0.7159+macro-F1;Pretrained+AST+%2B+Whisper+%2B+handcrafted+teacher;Distilled+into+EfficientAT+mn10_as+with+99.9%25+retention;Edge-ready+%E2%80%94+8.62+MB+INT8%2C+79.2+ms+CPU&font=Fira+Code&center=true&width=720&height=36&color=2DD4BF&vCenter=true&pause=1400&size=14&duration=3500" />
 </a>
 
 <br>
@@ -16,7 +16,7 @@
   <img alt="Phase 3 Shipped" src="https://img.shields.io/badge/Phase_3-Shipped-0F766E?style=for-the-badge&labelColor=ffffff">
 </picture>
 &nbsp;
-<img alt="Macro-F1" src="https://img.shields.io/badge/Macro--F1-0.6566%20%C2%B1%200.048-14B8A6?style=for-the-badge&labelColor=0F172A">
+<img alt="Macro-F1" src="https://img.shields.io/badge/Edge_Macro--F1-0.7159%20%C2%B1%200.0403-14B8A6?style=for-the-badge&labelColor=0F172A">
 &nbsp;
 <img alt="5-class strict" src="https://img.shields.io/badge/Classes-5--strict-0F766E?style=for-the-badge&labelColor=0F172A">
 &nbsp;
@@ -39,8 +39,8 @@
 <br><br>
 
 **A three-phase research project that takes infant-cry classification from a leaky 0.270 macro-F1 baseline,**
-**through a 0.507 hybrid ensemble, to a deduplicated multi-source teacher at 0.6566 ± 0.048 macro-F1,**
-**then distils that teacher into a sub-1 MB MobileNetV3 student ready for hospitals, NICUs, and home monitors.**
+**through a 0.507 hybrid ensemble, to a final EfficientAT `mn10_as` edge student at 0.7159 ± 0.0403 macro-F1,**
+**retaining 99.9% of its multi-teacher ensemble while running as an 8.62 MB INT8 audio CNN.**
 
 <br>
 
@@ -64,20 +64,20 @@
 <tr>
 <th align="center" width="25%">Phase 1<br><sub>Classical baseline</sub></th>
 <th align="center" width="25%">Phase 2<br><sub>Hybrid ensemble</sub></th>
-<th align="center" width="25%">Phase 3 — Teacher<br><sub>Multi-view pretrained</sub></th>
-<th align="center" width="25%">Phase 3 — Student<br><sub>Edge-distilled</sub></th>
+<th align="center" width="25%">Phase 3 — Teacher<br><sub>Validation-weighted multi-view</sub></th>
+<th align="center" width="25%">Phase 3 — Student<br><sub>EfficientAT mn10_as</sub></th>
 </tr>
 <tr>
 <td align="center"><h2>0.270</h2><sub>SVM + SMOTE</sub></td>
 <td align="center"><h2>0.507</h2><sub>SVM + CNN-BiLSTM fusion</sub></td>
-<td align="center"><h2>0.6566</h2><sub>± 0.048&nbsp;&middot;&nbsp;best fold 0.7486</sub></td>
-<td align="center"><h2>~5 MB</h2><sub>INT8&nbsp;&middot;&nbsp;~3–12 ms CPU</sub></td>
+<td align="center"><h2>0.7168</h2><sub>± 0.0185&nbsp;&middot;&nbsp;distillation teacher</sub></td>
+<td align="center"><h2>0.7159</h2><sub>99.9% retention&nbsp;&middot;&nbsp;8.62 MB INT8</sub></td>
 </tr>
 </table>
 
 </div>
 
-> **+143%** macro-F1 over Phase 1 &nbsp;·&nbsp; **+30%** over Phase 2 &nbsp;·&nbsp; reported as **5-seed repeated mean ± std**, not a single lucky run.
+> **+165%** macro-F1 over Phase 1 &nbsp;·&nbsp; **+41%** over Phase 2 &nbsp;·&nbsp; the final edge student essentially matched the teacher while running as one compact audio CNN.
 
 <br>
 
@@ -97,13 +97,13 @@ The project ran through three phases. Each one solved the failure mode of the pr
 |:-----:|:---------|:--------------|:--------:|:---------:|
 | **1** | Classical ML on Donate-a-Cry | 411-d MFCC/CQCC/F0/chroma + SVM + SMOTE + OvO | 0.270 | n/a |
 | **2** | Hybrid CNN-BiLSTM + classical | Mel-spec + LDAM/DRW + weighted ensemble with Phase 1 SVM | 0.507 | 35.9 KB INT8 |
-| **3** | Pretrained foundations + distillation | AST + Whisper + handcrafted → RBF SVM teacher → EfficientAT MobileNet student | **0.6566 ± 0.048** | **~1–5 MB INT8** |
+| **3** | Pretrained foundations + distillation | AST + Whisper + handcrafted → validation-weighted teacher → EfficientAT MobileNet student | **0.7159 ± 0.0403** | **1.65–8.62 MB INT8** |
 
 </div>
 
 <br>
 
-> **Why Phase 3 broke the ceiling.** Phase 2 had already shown that bespoke deep models over-fit on a 1k-clip cry corpus. Phase 3 stops fighting from scratch and instead borrows representational power from large pretrained audio foundations (AST, Whisper), classifies with a properly tuned RBF SVM, and only *then* distils into a tiny MobileNetV3 audio student so the system can run on a Raspberry Pi.
+> **Why Phase 3 broke the ceiling.** Phase 2 had already shown that bespoke deep models over-fit on a tiny cry corpus. Phase 3 stops fighting from scratch and instead borrows representational power from large pretrained audio foundations (AST, Whisper), builds a validation-weighted multi-teacher ensemble, and only *then* distils that knowledge into a tiny MobileNetV3 audio student so the system can run on edge hardware.
 
 <br>
 
@@ -129,14 +129,14 @@ flowchart LR
         D4 --> T4["Handcrafted<br/>411-d"]
         T1 --> T5["AST-aux<br/>frozen embed"]
         T2 & T3 & T4 & T5 --> T6["Multi-view bank<br/>+ PCA-128 + StdScaler"]
-        T6 --> T7["RBF SVM + ensemble<br/>0.6566 ± 0.048 macro-F1"]
+        T6 --> T7["Validation-weighted teacher<br/>0.7168 ± 0.0185 macro-F1"]
     end
 
     subgraph EDGE["Phase 3 edge student"]
         T7 --> E1["Validation-weighted<br/>multi-teacher soft labels"]
         E1 --> E2["EfficientAT MobileNetV3<br/>mn10_as · mn04_as"]
         E2 --> E3["KL + LS-CE<br/>+ mixup + SpecAugment"]
-        E3 --> E4["INT8 quant<br/>+ CPU latency bench"]
+        E3 --> E4["mn10_as: 0.7159 ± 0.0403<br/>99.9% teacher retention"]
     end
 
     style TEACHER fill:#0F766E20,stroke:#0F766E
@@ -267,18 +267,19 @@ with 16 kHz → 32 kHz on-the-fly resampling, **EfficientAT's `AugmentMelSTFT` +
 
 <br>
 
-### `6.3` &nbsp; Edge student — design targets
+### `6.3` &nbsp; Edge student — actual distilled results
 
 <div align="center">
 
-| Variant | Params | INT8 size | CPU latency<br><sub>batch 1, 10 s clip</sub> | Macro-F1 target<br><sub>5-seed band</sub> | Use case |
-|:--------|:------:|:---------:|:--------------------------------------------:|:------------------------------------------:|:---------|
-| `mn10_as` | 4.88 M | ~5 MB | ~8–12 ms | ~0.55–0.62 | phone, RPi 4 |
-| `mn04_as` | 0.98 M | ~1 MB | ~3–5 ms | ~0.48–0.56 | microcontroller-class |
+| Model | Macro-F1 | Retention vs teacher | Params | INT8 size | CPU INT8 latency |
+|:------|:--------:|:--------------------:|:------:|:---------:|:---------------:|
+| Multi-teacher ensemble | 0.7168 ± 0.0185 | 100.0% | heavy | — | — |
+| **`mn10_as`** ⭐ | **0.7159 ± 0.0403** | **99.9%** | 4.21 M | 8.62 MB | 79.2 ms |
+| `mn04_as` | 0.6500 ± 0.0390 | 90.7% | 0.72 M | 1.65 MB | 44.1 ms |
 
 </div>
 
-> The student numbers are reported as a **5-seed band** under the same repeated-split protocol as the teacher. Final per-seed values land in `results/phase2a/metrics/phase3_edge_student_*_repeated_eval.json` after the Colab run.
+> **Final model choice:** `mn10_as`. It retains essentially all teacher performance while replacing the heavy AST + Whisper + SVM runtime with one compact AudioSet-pretrained audio CNN.
 
 <br>
 
@@ -296,7 +297,7 @@ with 16 kHz → 32 kHz on-the-fly resampling, **EfficientAT's `AugmentMelSTFT` +
 | 🎬 Phase 3 slide deck | HTML · 20 slides | [`reports/phase3_presentation/presentation.html`](reports/phase3_presentation/presentation.html) |
 | ⚡ End-to-end Colab notebook | `.ipynb` | [`notebooks/Phase2A_Pretrained_Feature_Bank.ipynb`](notebooks/Phase2A_Pretrained_Feature_Bank.ipynb) |
 | 📊 Repeated-eval summary | CSV | [`reports/phase3_report/figures/repeated_eval_summary.csv`](reports/phase3_report/figures/repeated_eval_summary.csv) |
-| 🖼️ Publication figures | PNG ×9 | [`reports/phase3_report/figures/`](reports/phase3_report/figures) |
+| 🖼️ Publication figures | PNG ×10 | [`reports/phase3_report/figures/`](reports/phase3_report/figures) |
 | 📑 Phase 2 report (legacy) | PDF | [`reports/phase2_report/phase2_report.pdf`](reports/phase2_report/phase2_report.pdf) |
 | 📑 Phase 1 report (legacy) | PDF | [`reports/phase1_report/`](reports/phase1_report) |
 

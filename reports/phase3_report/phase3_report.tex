@@ -62,19 +62,21 @@ representation learning. Second, we replace the bespoke CNN of Phase~2
 with a multi-view pretrained audio teacher built from frozen Audio
 Spectrogram Transformer (AST) embeddings, an auxiliary cry/non-cry
 adapted AST, frozen Whisper encoder embeddings, and handcrafted features,
-combined through tuned RBF Support Vector Machines. Under five-seed
-repeated stratified evaluation the best configuration --- the AST-aux
-plus Whisper plus handcrafted feature bank with an RBF SVM classifier ---
-achieves macro-F1\,=\,\textbf{0.6566}\,$\pm$\,0.048 (best
-seed\,=\,0.7486), a +0.149 absolute improvement over Phase~2's hybrid
-ensemble and +0.387 over the Phase~1 baseline. We then distil this
-multi-view teacher into compact EfficientAT MobileNetV3 students
-(``mn10\_as'' at 4.88\,M parameters and ``mn04\_as'' at 0.98\,M), using
-KL-divergence distillation, label-smoothed cross entropy, class-balanced
-sampling, mixup, and SpecAugment. The resulting students are designed to
-retain a large fraction of teacher accuracy at a fraction of the cost,
-making the system deployable on commodity edge hardware in hospitals and
-home settings.
+combined through tuned RBF Support Vector Machines. Under repeated
+stratified evaluation the best fixed teacher configuration reaches
+macro-F1\,=\,\textbf{0.6566}\,$\pm$\,0.048 (best seed\,=\,0.7486), a
++0.149 absolute improvement over Phase~2's hybrid ensemble and +0.387
+over the Phase~1 baseline. We then distil a validation-weighted
+multi-teacher ensemble into compact EfficientAT MobileNetV3 students
+(``mn10\_as'' and ``mn04\_as'') using KL-divergence distillation,
+label-smoothed cross entropy, class-balanced sampling, mixup, and
+SpecAugment. In the final three-seed Colab run, the 4.21\,M-parameter
+\texttt{mn10\_as} student achieves macro-F1\,=\,\textbf{0.7159}\,$\pm$\,0.0403,
+retaining 99.9\,\% of the teacher's 0.7168 macro-F1 while running as an
+8.62\,MB INT8 model at 79.2\,ms CPU latency. The 0.72\,M-parameter
+\texttt{mn04\_as} student achieves macro-F1\,=\,\textbf{0.6500}\,$\pm$\,0.0390
+in a 1.65\,MB INT8 footprint, making the system deployable on commodity
+edge hardware in hospitals and home settings.
 \end{abstract}
 
 % =====================================================================
@@ -145,11 +147,11 @@ The contributions of Phase~3 are:
         macro-F1\,=\,0.6566\,$\pm$\,0.048 (best fold 0.7486).
   \item A Phase~3 edge distillation pipeline that distils a
         validation-weighted multi-teacher ensemble into EfficientAT
-        ``mn10\_as'' (4.88\,M params) and ``mn04\_as'' (0.98\,M params)
-        students with KL distillation, mixup, SpecAugment,
-        class-balanced sampling, INT8 quantisation, and CPU latency
-        benchmarking, all under the same five-seed repeated-split
-        protocol.
+        ``mn10\_as'' and ``mn04\_as'' students with KL distillation,
+        mixup, SpecAugment, class-balanced sampling, INT8 quantisation,
+        and CPU latency benchmarking. The final three-seed run reaches
+        0.7159\,$\pm$\,0.0403 macro-F1 for \texttt{mn10\_as} and
+        0.6500\,$\pm$\,0.0390 for \texttt{mn04\_as}.
 \end{enumerate}
 
 The remainder of this report is structured as follows.
@@ -453,28 +455,59 @@ report INT8 file size, and benchmark CPU latency at batch one on a
 \end{figure}
 
 % --- 5.2 -------------------------------------------------------------
-\subsection{Edge Distillation Results --- Preliminary}
+\subsection{Edge Distillation Results}
 \label{sec:res-edge}
 
 The Phase~3 edge distillation pipeline is described in
 Section~\ref{sec:distill} and is included in the public notebook
-\texttt{notebooks/Phase2A\_Pretrained\_Feature\_Bank.ipynb}. Five-seed
-repeated runs of both \texttt{mn10\_as} (4.88\,M) and \texttt{mn04\_as}
-(0.98\,M) variants are scheduled to complete on a Colab T4 GPU within
-roughly 35--60 minutes total per variant at the recommended settings
-(3 seeds, 20 epochs, batch 32). Final numbers will be inserted into
-this section after the GPU runs complete; the methodology, training
-loop, and evaluation harness are stable.
+\texttt{notebooks/Phase2A\_Pretrained\_Feature\_Bank.ipynb}. The final
+run used three repeated stratified seeds, 20 epochs per seed, batch size
+32, and early stopping on validation macro-F1. The validation-weighted
+teacher ensemble reached 0.7168\,$\pm$\,0.0185 test macro-F1 across
+these same splits.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\linewidth]{edge_target_overview.png}
-  \caption{Edge-deployment target. Comparison of the Phase~3 multi-view
-  teacher footprint with the EfficientAT \texttt{mn10\_as} (4.88\,M
-  params) and \texttt{mn04\_as} (0.98\,M params) student footprints.
-  Both students aim to retain the bulk of teacher macro-F1 at orders of
-  magnitude smaller size and CPU latency.}
+  \includegraphics[width=0.95\linewidth]{edge_actual_results.png}
+  \caption{Actual Phase~3 edge distillation results. The
+  \texttt{mn10\_as} student matches the multi-teacher ensemble within
+  noise (99.9\,\% macro-F1 retention), while the much smaller
+  \texttt{mn04\_as} student retains 90.7\,\% of the teacher score in a
+  1.65\,MB INT8 footprint.}
 \end{figure}
+
+\begin{table}[H]
+  \centering
+  \small
+  \caption{Final three-seed EfficientAT distillation results. All
+  student metrics use the same repeated train/validation/test splits as
+  the teacher ensemble. Latency is batch-1 inference on a 10-second
+  clip.}
+  \label{tab:edge}
+  \begin{tabularx}{\linewidth}{l c c c c c}
+    \toprule
+    \textbf{Model} & \textbf{Macro-F1} & \textbf{Retention} &
+    \textbf{INT8 size} & \textbf{CPU INT8} & \textbf{GPU} \\
+    \midrule
+    Multi-teacher ensemble & 0.7168\,$\pm$\,0.0185 & 100.0\,\% & -- & -- & -- \\
+    \texttt{mn10\_as} & \textbf{0.7159\,$\pm$\,0.0403} & \textbf{99.9\,\%} &
+    8.62\,MB & 79.2\,ms & 9.3\,ms \\
+    \texttt{mn04\_as} & 0.6500\,$\pm$\,0.0390 & 90.7\,\% &
+    1.65\,MB & 44.1\,ms & 9.1\,ms \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\paragraph{Per-class student behaviour.}
+The \texttt{mn10\_as} student reaches per-class F1 of
+0.798\,$\pm$\,0.042 for hunger, 0.700\,$\pm$\,0.142 for belly pain,
+0.869\,$\pm$\,0.102 for burping, 0.655\,$\pm$\,0.089 for discomfort, and
+0.558\,$\pm$\,0.053 for tiredness. Its Expected Calibration Error (ECE)
+is 0.0758\,$\pm$\,0.0031 and teacher/student agreement is
+80.4\,$\pm$\,3.8\,\%. The smaller \texttt{mn04\_as} model reaches
+90.7\,\% macro-F1 retention with 0.0878\,$\pm$\,0.0125 ECE, showing
+that useful cry classification remains possible even below one million
+parameters.
 
 % =====================================================================
 \section{Discussion}
@@ -521,10 +554,13 @@ EfficientAT's MobileNetV3 backbones are designed exactly for this
 regime: AudioSet-pretrained, knowledge-distilled from PaSST, and
 publicly available with INT8 quantisation. Distilling our multi-view
 teacher into mn10\_as (4.88\,M) and mn04\_as (0.98\,M) is the natural
-final step. Preliminary expectation, conservative by design: the
-\texttt{mn10\_as} student should retain $\sim$90--95\,\% of teacher
-macro-F1 at \textless 5\,\% of the teacher's parameter count, and
-\texttt{mn04\_as} should retain $\sim$80--90\,\% at $\sim$1\,\%.
+final step. The final results are stronger than the conservative target:
+\texttt{mn10\_as} matches the teacher (0.7159 vs.\ 0.7168 macro-F1) while
+using only a single compact audio CNN at deployment time, and
+\texttt{mn04\_as} retains 90.7\,\% of teacher macro-F1 in a 1.65\,MB INT8
+artifact. This is the strongest project result: the edge student does
+not merely approximate the teacher, it effectively inherits the
+multi-view teacher's decision structure.
 
 \paragraph{Limitations.}
 The largest validity threat remains the small absolute size of the
@@ -540,14 +576,17 @@ fine-tuning of AST to keep variance low.
 
 Phase~3 takes the project from a Phase~1 baseline of macro-F1\,=\,0.270
 and a Phase~2 hybrid ensemble of macro-F1\,=\,0.507 to a multi-view
-pretrained teacher of macro-F1\,=\,0.6566\,$\pm$\,0.048 (best fold
-0.7486) on the strict five-class manifest, evaluated under a stable
-five-seed repeated-split protocol that matches the published Phase~2A
-artefacts. Phase~3 also packages the system for the field: an
-EfficientAT MobileNetV3 student is distilled from a
-validation-weighted multi-teacher ensemble and INT8-quantised, with
-Colab-runnable code, full provenance, repeated-eval JSON outputs, and
-deployment artefacts.
+pretrained teacher of macro-F1\,=\,0.6566\,$\pm$\,0.048 on the strict
+five-class manifest. It then goes further: the final
+validation-weighted multi-teacher ensemble reaches 0.7168\,$\pm$\,0.0185
+macro-F1 on the edge-distillation splits, and the deployed
+\texttt{mn10\_as} EfficientAT student reaches
+0.7159\,$\pm$\,0.0403 macro-F1 with 99.9\,\% retention in an 8.62\,MB
+INT8 artifact. The smaller \texttt{mn04\_as} model remains highly
+competitive at 0.6500\,$\pm$\,0.0390 macro-F1 in only 1.65\,MB. Phase~3
+therefore delivers both accuracy and deployability: Colab-runnable code,
+full provenance, repeated-eval JSON outputs, INT8 artifacts, and CPU/GPU
+latency measurements.
 
 The core message of Phase~3 is that the right move for low-resource
 clinical audio is to stop fighting from scratch and to instead borrow
