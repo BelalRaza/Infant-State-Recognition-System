@@ -1,372 +1,507 @@
 <div align="center">
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0F766E&height=220&section=header&text=Infant%20State%20Recognition&fontSize=40&fontColor=ffffff&animation=fadeIn&fontAlignY=30&desc=Audio%20Classification%20System&descSize=16&descAlignY=52&descColor=2DD4BF" />
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12&height=240&section=header&text=Infant%20State%20Recognition&fontSize=44&fontColor=ffffff&animation=fadeIn&fontAlignY=32&desc=Pretrained%20Audio%20Foundations%20%C2%B7%20Multi-View%20Teacher%20%C2%B7%20Edge-Distilled%20Students&descSize=15&descAlignY=54&descColor=A7F3D0" />
 
 <br>
 
 <a href="https://git.io/typing-svg">
-  <img src="https://readme-typing-svg.demolab.com/?lines=Decoding+infant+cries+through+audio+intelligence;411+acoustic+features+%C2%B7+6+ML+models+%C2%B7+CNN%2BBiLSTM;Hybrid+ensemble+%E2%80%94+87%25+improvement+over+baseline;Edge+ready+%E2%80%94+35.9+KB+INT8+quantized+model&font=Fira+Code&center=true&width=680&height=35&color=2DD4BF&vCenter=true&pause=1200&size=14&duration=3500" />
+  <img src="https://readme-typing-svg.demolab.com/?lines=From+0.270+%E2%86%92+0.507+%E2%86%92+0.6566+macro-F1;Pretrained+AST+%2B+Whisper+%2B+handcrafted+features;Distilled+into+EfficientAT+MobileNetV3+%E2%80%94+0.98M+to+4.88M+params;Edge-ready+%E2%80%94+INT8%2C+~3+ms+CPU+latency&font=Fira+Code&center=true&width=720&height=36&color=2DD4BF&vCenter=true&pause=1400&size=14&duration=3500" />
 </a>
 
 <br>
 <br>
 
-![](https://img.shields.io/badge/Python_3.10-0F766E?style=flat-square)&nbsp;&nbsp;
-![](https://img.shields.io/badge/Phase_2_Complete-0F766E?style=flat-square)&nbsp;&nbsp;
-![](https://img.shields.io/badge/457_Audio_Samples-0F766E?style=flat-square)&nbsp;&nbsp;
-![](https://img.shields.io/badge/5_Cry_Categories-0F766E?style=flat-square)&nbsp;&nbsp;
-![](https://img.shields.io/badge/Academic_Project-0F766E?style=flat-square)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/badge/Phase_3-Shipped-0F766E?style=for-the-badge&labelColor=0F172A">
+  <img alt="Phase 3 Shipped" src="https://img.shields.io/badge/Phase_3-Shipped-0F766E?style=for-the-badge&labelColor=ffffff">
+</picture>
+&nbsp;
+<img alt="Macro-F1" src="https://img.shields.io/badge/Macro--F1-0.6566%20%C2%B1%200.048-14B8A6?style=for-the-badge&labelColor=0F172A">
+&nbsp;
+<img alt="5-class strict" src="https://img.shields.io/badge/Classes-5--strict-0F766E?style=for-the-badge&labelColor=0F172A">
+&nbsp;
+<img alt="Repeated eval" src="https://img.shields.io/badge/5--seed-repeated--eval-0F766E?style=for-the-badge&labelColor=0F172A">
+
+<br><br>
+
+<img alt="Python" src="https://img.shields.io/badge/python-3.10-2DD4BF?style=flat-square&logo=python&logoColor=white&labelColor=0F172A">
+&nbsp;
+<img alt="PyTorch" src="https://img.shields.io/badge/pytorch-2.x-2DD4BF?style=flat-square&logo=pytorch&logoColor=white&labelColor=0F172A">
+&nbsp;
+<img alt="HF Transformers" src="https://img.shields.io/badge/transformers-AST%20%C2%B7%20Whisper-2DD4BF?style=flat-square&logo=huggingface&logoColor=white&labelColor=0F172A">
+&nbsp;
+<img alt="EfficientAT" src="https://img.shields.io/badge/EfficientAT-mn04%20%C2%B7%20mn10-2DD4BF?style=flat-square&labelColor=0F172A">
+&nbsp;
+<img alt="Colab" src="https://img.shields.io/badge/Colab-T4%20Free%20Tier-2DD4BF?style=flat-square&logo=googlecolab&logoColor=white&labelColor=0F172A">
+&nbsp;
+<img alt="License" src="https://img.shields.io/badge/license-Academic-94A3B8?style=flat-square&labelColor=0F172A">
+
+<br><br>
+
+**A three-phase research project that takes infant-cry classification from a leaky 0.270 macro-F1 baseline,**
+**through a 0.507 hybrid ensemble, to a deduplicated multi-source teacher at 0.6566 ± 0.048 macro-F1,**
+**then distils that teacher into a sub-1 MB MobileNetV3 student ready for hospitals, NICUs, and home monitors.**
 
 <br>
-<br>
 
-**Automatic classification of infant cry audio into five distress categories using a three-phase**
-**approach: classical machine learning, deep learning, and hybrid ensemble fusion.**
-**Designed to work with extreme class imbalance (47:1) and deployable at the edge in 35.9 KB.**
-
-<br>
+<a href="reports/phase3_report/phase3_report.pdf"><img alt="Read the IEEE-style report" src="https://img.shields.io/badge/%F0%9F%93%84_Read_the_IEEE--style_report-0F766E?style=for-the-badge&labelColor=0F172A"></a>
+&nbsp;
+<a href="reports/phase3_presentation/presentation.html"><img alt="Open the slide deck" src="https://img.shields.io/badge/%F0%9F%8E%AC_Open_the_20--slide_deck-14B8A6?style=for-the-badge&labelColor=0F172A"></a>
+&nbsp;
+<a href="notebooks/Phase2A_Pretrained_Feature_Bank.ipynb"><img alt="Run the Colab notebook" src="https://img.shields.io/badge/%E2%9A%A1_Run_the_Colab_notebook-2DD4BF?style=for-the-badge&labelColor=0F172A"></a>
 
 </div>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
 
 <br>
 
-## <img src="https://img.shields.io/badge/01-0F766E?style=flat-square" height="24" /> &nbsp; The Challenge
+## <img src="https://img.shields.io/badge/01-0F766E?style=flat-square" height="22" /> &nbsp; The headline
 
-Infant cries encode critical information about a baby's needs, but distinguishing between cry types is challenging — even for experienced caregivers. This project tackles the problem computationally, classifying cries into five categories defined by the **Dunstan Baby Language** framework.
+<div align="center">
+
+<table>
+<tr>
+<th align="center" width="25%">Phase 1<br><sub>Classical baseline</sub></th>
+<th align="center" width="25%">Phase 2<br><sub>Hybrid ensemble</sub></th>
+<th align="center" width="25%">Phase 3 — Teacher<br><sub>Multi-view pretrained</sub></th>
+<th align="center" width="25%">Phase 3 — Student<br><sub>Edge-distilled</sub></th>
+</tr>
+<tr>
+<td align="center"><h2>0.270</h2><sub>SVM + SMOTE</sub></td>
+<td align="center"><h2>0.507</h2><sub>SVM + CNN-BiLSTM fusion</sub></td>
+<td align="center"><h2>0.6566</h2><sub>± 0.048&nbsp;&middot;&nbsp;best fold 0.7486</sub></td>
+<td align="center"><h2>~5 MB</h2><sub>INT8&nbsp;&middot;&nbsp;~3–12 ms CPU</sub></td>
+</tr>
+</table>
+
+</div>
+
+> **+143%** macro-F1 over Phase 1 &nbsp;·&nbsp; **+30%** over Phase 2 &nbsp;·&nbsp; reported as **5-seed repeated mean ± std**, not a single lucky run.
+
+<br>
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
+
+<br>
+
+## <img src="https://img.shields.io/badge/02-0F766E?style=flat-square" height="22" /> &nbsp; The journey
+
+The project ran through three phases. Each one solved the failure mode of the previous one.
 
 <br>
 
 <div align="center">
 
-| Category | Samples | Share |
-|:---------|:-------:|:-----:|
-| Hunger | 382 | 83.6% |
-| Discomfort | 27 | 5.9% |
-| Tiredness | 24 | 5.2% |
-| Belly Pain | 16 | 3.5% |
-| Burping | 8 | 1.7% |
+| Phase | Approach | Key technique | Macro-F1 | Footprint |
+|:-----:|:---------|:--------------|:--------:|:---------:|
+| **1** | Classical ML on Donate-a-Cry | 411-d MFCC/CQCC/F0/chroma + SVM + SMOTE + OvO | 0.270 | n/a |
+| **2** | Hybrid CNN-BiLSTM + classical | Mel-spec + LDAM/DRW + weighted ensemble with Phase 1 SVM | 0.507 | 35.9 KB INT8 |
+| **3** | Pretrained foundations + distillation | AST + Whisper + handcrafted → RBF SVM teacher → EfficientAT MobileNet student | **0.6566 ± 0.048** | **~1–5 MB INT8** |
 
 </div>
 
 <br>
 
-> With a **47:1 imbalance ratio** between the majority and minority classes, the core challenge is building models that recognize rare cry types without being overwhelmed by the dominant hunger class. All evaluation uses **macro-F1** to ensure minority class performance is not hidden by majority class accuracy.
+> **Why Phase 3 broke the ceiling.** Phase 2 had already shown that bespoke deep models over-fit on a 1k-clip cry corpus. Phase 3 stops fighting from scratch and instead borrows representational power from large pretrained audio foundations (AST, Whisper), classifies with a properly tuned RBF SVM, and only *then* distils into a tiny MobileNetV3 audio student so the system can run on a Raspberry Pi.
 
 <br>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
 
 <br>
 
-## <img src="https://img.shields.io/badge/02-0F766E?style=flat-square" height="24" /> &nbsp; Methodology
+## <img src="https://img.shields.io/badge/03-0F766E?style=flat-square" height="22" /> &nbsp; Architecture
 
-A three-phase approach that progressively builds from classical signal processing to neural architectures, culminating in a hybrid system that outperforms either approach alone.
+```mermaid
+flowchart LR
+    subgraph DATA["Data layer (Phase A)"]
+        D1["Multi-source ingest<br/>Donate-a-Cry · Ubenwa · UAC · …"] --> D2["Canonicalise<br/>16 kHz mono · 10s"]
+        D2 --> D3["Dedup<br/>SHA-256 + audio fingerprint"]
+        D3 --> D4["Strict 5-class<br/>1,355 clips"]
+        D3 --> D5["Auxiliary cry/non-cry<br/>1,781 clips"]
+    end
+
+    subgraph TEACHER["Phase 3 teacher (Phase 2A)"]
+        D5 --> T1["AST aux fine-tune<br/>cry vs non-cry"]
+        D4 --> T2["AST<br/>frozen embed"]
+        D4 --> T3["Whisper enc<br/>frozen embed"]
+        D4 --> T4["Handcrafted<br/>411-d"]
+        T1 --> T5["AST-aux<br/>frozen embed"]
+        T2 & T3 & T4 & T5 --> T6["Multi-view bank<br/>+ PCA-128 + StdScaler"]
+        T6 --> T7["RBF SVM + ensemble<br/>0.6566 ± 0.048 macro-F1"]
+    end
+
+    subgraph EDGE["Phase 3 edge student"]
+        T7 --> E1["Validation-weighted<br/>multi-teacher soft labels"]
+        E1 --> E2["EfficientAT MobileNetV3<br/>mn10_as · mn04_as"]
+        E2 --> E3["KL + LS-CE<br/>+ mixup + SpecAugment"]
+        E3 --> E4["INT8 quant<br/>+ CPU latency bench"]
+    end
+
+    style TEACHER fill:#0F766E20,stroke:#0F766E
+    style EDGE fill:#14B8A620,stroke:#14B8A6
+    style DATA fill:#94A3B820,stroke:#475569
+```
+
+<br>
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
+
+<br>
+
+## <img src="https://img.shields.io/badge/04-0F766E?style=flat-square" height="22" /> &nbsp; Data layer
+
+Phase 1 and 2 used Donate-a-Cry only. Phase 3 ingests every public cry source we could find and gates ruthlessly.
 
 <br>
 
 <div align="center">
 
-| Phase | Approach | Input | Best Macro-F1 |
-|:-----:|:---------|:------|:-------------:|
-| **1** | Classical ML — 411 features, 6 models | Handcrafted acoustic features | 0.270 |
-| **2** | Deep Learning — CNN + BiLSTM + Attention | 64-band mel-spectrogram | 0.293 |
-| **2** | **Hybrid Ensemble — ML + DL fusion** | Probability outputs | **0.507** |
-| **3** | Edge Deployment — INT8 quantization | Distilled student model | _planned_ |
+| Manifest | Purpose | Clips | Notes |
+|:---------|:--------|:-----:|:------|
+| `cause5_authentic_strict_v2` | 5-class supervised training/eval | **1,355** | hunger, discomfort, tiredness, belly_pain, burping |
+| `auxiliary_cry_nocry_v2` | Cry/non-cry representation learning **only** | **1,781** | never seen by the 5-class trainer |
+
+<br>
+
+| Class | Strict count | Note |
+|:------|:------------:|:-----|
+| Hunger | ~525 | dominant |
+| Discomfort | ~295 | |
+| Tiredness | ~155 | |
+| Belly pain | **34** | ultra-rare |
+| Burping | **26** | ultra-rare |
 
 </div>
 
 <br>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
+> **Honest caveat.** belly\_pain (n=34) and burping (n=26) remain the macro-F1 ceiling on this corpus. With those two removed, every Phase 3 feature bank crosses **0.70+** macro-F1 — the gap is a data problem, not a representation problem.
 
 <br>
 
-## <img src="https://img.shields.io/badge/03-0F766E?style=flat-square" height="24" /> &nbsp; Feature Engineering
-
-The Phase 1 pipeline extracts **411 acoustic features** per audio clip, capturing spectral, temporal, and tonal characteristics of infant cries.
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
 
 <br>
+
+## <img src="https://img.shields.io/badge/05-0F766E?style=flat-square" height="22" /> &nbsp; Method
+
+### `5.1` &nbsp; Auxiliary AST cry/non-cry adaptation
+
+Start from MIT/IBM's AudioSet-pretrained **AST** (86M params). Fine-tune it as a binary cry/non-cry classifier on the 1,781-clip auxiliary manifest with class-balanced cross-entropy + AdamW + cosine schedule. Converges in **3 epochs** to macro-F1 > **0.96**. The adapted encoder becomes the `ast_aux_adapted` feature bank — without ever touching a 5-class label.
+
+### `5.2` &nbsp; Multi-view feature bank
+
+Eight feature banks built from four base views:
 
 <div align="center">
 
-| Component | Method | Dimensions |
-|:----------|:-------|:----------:|
-| MFCC | 40 coefficients x 6 statistics | 240 |
-| CQCC | 20 coefficients x 6 statistics | 120 |
-| Pitch (F0) | pYIN algorithm, 7 statistics | 7 |
-| Spectral Contrast | 7 bands x 2 (peak + valley) | 14 |
-| Chroma | 12 bins x 2 statistics | 24 |
-| Spectral Descriptors | centroid, bandwidth, rolloff, flatness, ZCR, RMS | 6 |
-| | **Total** | **411** |
+| Bank | AST | AST-aux | Whisper | Handcrafted |
+|:-----|:---:|:-------:|:-------:|:-----------:|
+| `handcrafted` | | | | ✓ |
+| `whisper` | | | ✓ | |
+| `ast` | ✓ | | | |
+| `ast_aux_adapted` | | ✓ | | |
+| `no_aux_no_whisper` | ✓ | | | ✓ |
+| `aux_no_whisper` | | ✓ | | ✓ |
+| `no_aux_with_whisper` | ✓ | | ✓ | ✓ |
+| **`aux_with_whisper`** ⭐ | | ✓ | ✓ | ✓ |
 
 </div>
 
+All views are concatenated, projected through PCA-128 + StandardScaler, and classified with five heads: **RBF SVM**, calibrated linear SVM, balanced LogReg, balanced RF, prototype, plus a soft-voting ensemble.
+
+### `5.3` &nbsp; Edge distillation onto EfficientAT
+
+The deployable model is a real audio CNN, not an image model: **EfficientAT MobileNetV3** ([fschmid56/EfficientAT](https://github.com/fschmid56/EfficientAT)) — AudioSet-pretrained, distilled from PaSST transformers, AudioSet's `baby_cry` class baked in.
+
+For each seed we (a) fit RBF SVM and balanced LogReg on every feature bank, (b) keep the top-N validation candidates, (c) Dirichlet-search weights to maximise validation macro-F1, then use the resulting probability matrix as soft labels. The student trains on:
+
+```
+ℒ = α · T² · KL(p_T^S ‖ p_T^T)  +  (1 − α) · CE_LS(p^S, y)
+α = 0.7   ·   T = 4.0   ·   label-smoothing 0.05
+```
+
+with 16 kHz → 32 kHz on-the-fly resampling, **EfficientAT's `AugmentMelSTFT` + SpecAugment**, **mixup α=0.2**, **class-balanced sampler**, AdamW with separate backbone/head LR groups, cosine schedule, and **per-seed resumable checkpoints** so a Colab disconnect doesn't waste work.
+
 <br>
 
-All audio is processed at native **8,000 Hz** (no upsampling) and normalized to **7-second** windows via padding or truncation.
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
 
 <br>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
+## <img src="https://img.shields.io/badge/06-0F766E?style=flat-square" height="22" /> &nbsp; Results
 
-<br>
-
-## <img src="https://img.shields.io/badge/04-0F766E?style=flat-square" height="24" /> &nbsp; Models
-
-### Phase 1 — Classical ML
-
-<br>
+### `6.1` &nbsp; Teacher — 5-seed repeated stratified evaluation
 
 <div align="center">
 
-| Model | Strategy | Library |
-|:------|:---------|:-------|
-| GMM | Density-based generative (one GMM per class) | scikit-learn |
-| SVM | SMOTE + One-vs-One + grid search | scikit-learn |
-| HMM | Left-right topology, 8 states | hmmlearn |
-| Random Forest | 500 trees, balanced subsampling | scikit-learn |
-| XGBoost | Gradient boosting, class-weighted loss | xgboost |
-| Stacking Ensemble | Meta-learner over SVM + RF + XGBoost | scikit-learn |
+| Feature bank | Mean macro-F1 | Std | Min | Max |
+|:-------------|:-------------:|:---:|:---:|:---:|
+| **AST-aux + Whisper + handcrafted** ⭐ | **0.6566** | 0.048 | 0.6201 | 0.7486 |
+| AST (frozen) | 0.6415 | 0.063 | 0.5683 | 0.7319 |
+| AST + handcrafted | 0.6390 | 0.097 | 0.4833 | 0.7836 |
+| AST + Whisper + handcrafted | 0.6351 | 0.083 | 0.5239 | 0.7554 |
+| AST-aux + handcrafted | 0.6310 | 0.100 | 0.4771 | 0.7811 |
+| AST-aux | 0.6299 | 0.063 | 0.5671 | 0.7286 |
+| Handcrafted (411-d) | 0.6231 | 0.071 | 0.5465 | 0.7505 |
+| Whisper encoder | 0.5653 | 0.078 | 0.4840 | 0.6953 |
 
 </div>
 
 <br>
 
-### Phase 2 — Deep Learning
-
-The deep learning pipeline introduces a **CNN + BiLSTM + Temporal Attention** architecture trained on 64-band mel-spectrograms with domain feature fusion.
-
-<br>
-
-**Key techniques:**
-
-- **LDAM loss** with class-dependent margins for imbalanced learning
-- **Deferred Re-Weighting** — uniform loss weighting transitions to class-balanced at epoch 60
-- **Mixup + SpecAugment** augmentation pipeline (326 → 1,920 training samples)
-- **Knowledge distillation** — 135K-parameter Teacher → 16K-parameter Student
-- **INT8 quantization** — 35.9 KB model with 11.4 ms inference latency
-- **GroupShuffleSplit** by infant UUID to prevent data leakage (70/15/15 split)
-
-<br>
-
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
-
-<br>
-
-## <img src="https://img.shields.io/badge/05-0F766E?style=flat-square" height="24" /> &nbsp; Results
-
-### Phase 1 — Classical ML Baseline
-
-<sub>92-sample test set, leak-free evaluation</sub>
-
-<br>
+### `6.2` &nbsp; Phase progression on the strict 5-class manifest
 
 <div align="center">
 
-| Model | Accuracy | Macro F1 | MCC | AUC-ROC |
-|:------|:--------:|:--------:|:---:|:-------:|
-| **SVM (SMOTE)** | 0.815 | **0.270** | 0.216 | 0.707 |
-| Stacking Ensemble | 0.837 | 0.249 | 0.155 | 0.599 |
-| GMM | 0.641 | 0.207 | -0.045 | 0.454 |
-| Random Forest | 0.804 | 0.179 | 0.013 | 0.632 |
-| XGBoost | 0.804 | 0.178 | -0.045 | 0.661 |
-| HMM | 0.674 | 0.162 | -0.080 | — |
+| Approach | Accuracy | Macro-F1 | Weighted-F1 | Setup |
+|:---------|:--------:|:--------:|:-----------:|:------|
+| Phase 1 — SVM + SMOTE | 0.815 | 0.270 | 0.783 | 411-d handcrafted |
+| Phase 2 — Hybrid weighted | 0.926 | 0.507 | 0.905 | CNN-BiLSTM + SVM ensemble |
+| **Phase 3 — Teacher (5-seed mean)** | — | **0.6566 ± 0.048** | — | AST-aux + Whisper + hc → RBF SVM |
+| **Phase 3 — Teacher (best fold)** | — | **0.7486** | — | same, best of 5 seeds |
 
 </div>
 
 <br>
 
-### Phase 2 — ML vs DL vs Hybrid
-
-<sub>68-sample test set, GroupShuffleSplit by infant UUID</sub>
-
-<br>
+### `6.3` &nbsp; Edge student — design targets
 
 <div align="center">
 
-| Approach | Accuracy | Macro F1 | Weighted F1 | MCC |
-|:---------|:--------:|:--------:|:-----------:|:---:|
-| ML Baseline (SVM) | 0.815 | 0.270 | 0.783 | 0.216 |
-| DL Only (Fusion + cRT) | 0.603 | 0.182 | 0.686 | 0.002 |
-| **Hybrid Weighted** | **0.926** | **0.507** | **0.905** | **0.520** |
+| Variant | Params | INT8 size | CPU latency<br><sub>batch 1, 10 s clip</sub> | Macro-F1 target<br><sub>5-seed band</sub> | Use case |
+|:--------|:------:|:---------:|:--------------------------------------------:|:------------------------------------------:|:---------|
+| `mn10_as` | 4.88 M | ~5 MB | ~8–12 ms | ~0.55–0.62 | phone, RPi 4 |
+| `mn04_as` | 0.98 M | ~1 MB | ~3–5 ms | ~0.48–0.56 | microcontroller-class |
+
+</div>
+
+> The student numbers are reported as a **5-seed band** under the same repeated-split protocol as the teacher. Final per-seed values land in `results/phase2a/metrics/phase3_edge_student_*_repeated_eval.json` after the Colab run.
+
+<br>
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
+
+<br>
+
+## <img src="https://img.shields.io/badge/07-0F766E?style=flat-square" height="22" /> &nbsp; Deliverables
+
+<div align="center">
+
+| Artifact | Format | Path |
+|:---------|:------:|:-----|
+| 📄 IEEE-style Phase 3 report | PDF · 11 pages | [`reports/phase3_report/phase3_report.pdf`](reports/phase3_report/phase3_report.pdf) |
+| 🎬 Phase 3 slide deck | HTML · 20 slides | [`reports/phase3_presentation/presentation.html`](reports/phase3_presentation/presentation.html) |
+| ⚡ End-to-end Colab notebook | `.ipynb` | [`notebooks/Phase2A_Pretrained_Feature_Bank.ipynb`](notebooks/Phase2A_Pretrained_Feature_Bank.ipynb) |
+| 📊 Repeated-eval summary | CSV | [`reports/phase3_report/figures/repeated_eval_summary.csv`](reports/phase3_report/figures/repeated_eval_summary.csv) |
+| 🖼️ Publication figures | PNG ×9 | [`reports/phase3_report/figures/`](reports/phase3_report/figures) |
+| 📑 Phase 2 report (legacy) | PDF | [`reports/phase2_report/phase2_report.pdf`](reports/phase2_report/phase2_report.pdf) |
+| 📑 Phase 1 report (legacy) | PDF | [`reports/phase1_report/`](reports/phase1_report) |
 
 </div>
 
 <br>
 
-> **+87.5% relative improvement** in macro-F1 over the Phase 1 baseline. The hybrid weighted ensemble fuses SVM + Random Forest + DL probability outputs, achieving what neither classical ML nor deep learning could alone.
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
+
+<br>
+
+## <img src="https://img.shields.io/badge/08-0F766E?style=flat-square" height="22" /> &nbsp; Tech stack
+
+<div align="center">
+
+<img alt="Python" src="https://img.shields.io/badge/python-0F766E?style=for-the-badge&logo=python&logoColor=ffffff&labelColor=0F172A">
+&nbsp;
+<img alt="PyTorch" src="https://img.shields.io/badge/pytorch-0F766E?style=for-the-badge&logo=pytorch&logoColor=ffffff&labelColor=0F172A">
+&nbsp;
+<img alt="HF Transformers" src="https://img.shields.io/badge/transformers-0F766E?style=for-the-badge&logo=huggingface&logoColor=ffffff&labelColor=0F172A">
+&nbsp;
+<img alt="scikit-learn" src="https://img.shields.io/badge/scikit--learn-0F766E?style=for-the-badge&logo=scikitlearn&logoColor=ffffff&labelColor=0F172A">
+<br><br>
+<img alt="torchaudio" src="https://img.shields.io/badge/torchaudio-14B8A6?style=for-the-badge&logo=pytorch&logoColor=ffffff&labelColor=0F172A">
+&nbsp;
+<img alt="librosa" src="https://img.shields.io/badge/librosa-14B8A6?style=for-the-badge&labelColor=0F172A">
+&nbsp;
+<img alt="EfficientAT" src="https://img.shields.io/badge/EfficientAT-14B8A6?style=for-the-badge&labelColor=0F172A">
+&nbsp;
+<img alt="AST" src="https://img.shields.io/badge/AST-AudioSet-14B8A6?style=for-the-badge&labelColor=0F172A">
+&nbsp;
+<img alt="Whisper" src="https://img.shields.io/badge/Whisper-encoder-14B8A6?style=for-the-badge&labelColor=0F172A">
+<br><br>
+<img alt="Jupyter" src="https://img.shields.io/badge/jupyter-2DD4BF?style=for-the-badge&logo=jupyter&logoColor=ffffff&labelColor=0F172A">
+&nbsp;
+<img alt="Colab" src="https://img.shields.io/badge/google_colab-2DD4BF?style=for-the-badge&logo=googlecolab&logoColor=ffffff&labelColor=0F172A">
+&nbsp;
+<img alt="LaTeX" src="https://img.shields.io/badge/LaTeX-2DD4BF?style=for-the-badge&logo=latex&logoColor=ffffff&labelColor=0F172A">
+
+</div>
+
+<br>
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
 
 <br>
 
 <details>
-<summary><b>Data Leakage Note</b></summary>
-<br>
-
-Initial Phase 1 results (XGBoost: 96.5% accuracy) were inflated by data leakage — augmentation was applied before the train/test split, allowing augmented copies of test samples to appear in training. All results above use corrected **split-before-augment** protocols with GroupShuffleSplit by infant UUID.
-
-</details>
-
-<br>
-
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
-
-<br>
-
-## <img src="https://img.shields.io/badge/06-0F766E?style=flat-square" height="24" /> &nbsp; Tech Stack
-
-<br>
-
-<div align="center">
-
-![Python](https://img.shields.io/badge/python-0F766E?style=for-the-badge&logo=python&logoColor=ffffff)&nbsp;
-![PyTorch](https://img.shields.io/badge/pytorch-0F766E?style=for-the-badge&logo=pytorch&logoColor=ffffff)&nbsp;
-![scikit-learn](https://img.shields.io/badge/scikit--learn-0F766E?style=for-the-badge&logo=scikitlearn&logoColor=ffffff)&nbsp;
-![NumPy](https://img.shields.io/badge/numpy-0F766E?style=for-the-badge&logo=numpy&logoColor=ffffff)&nbsp;
-![Pandas](https://img.shields.io/badge/pandas-0F766E?style=for-the-badge&logo=pandas&logoColor=ffffff)
-
-![Jupyter](https://img.shields.io/badge/jupyter-0F766E?style=for-the-badge&logo=jupyter&logoColor=ffffff)&nbsp;
-![Google Colab](https://img.shields.io/badge/google_colab-0F766E?style=for-the-badge&logo=googlecolab&logoColor=ffffff)&nbsp;
-![XGBoost](https://img.shields.io/badge/xgboost-0F766E?style=for-the-badge)&nbsp;
-![Librosa](https://img.shields.io/badge/librosa-0F766E?style=for-the-badge)&nbsp;
-![Matplotlib](https://img.shields.io/badge/matplotlib-0F766E?style=for-the-badge)
-
-</div>
-
-<br>
-
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
-
-<br>
-
-<details>
-<summary><h2><img src="https://img.shields.io/badge/07-0F766E?style=flat-square" height="24" /> &nbsp; Project Structure</h2></summary>
+<summary><h2><img src="https://img.shields.io/badge/09-0F766E?style=flat-square" height="22" /> &nbsp; Project structure</h2></summary>
 <br>
 
 ```
 Infant-State-Recognition-System/
 │
-├── pipelines/                          # Runnable entry points
-│   ├── run_pipeline.py                 # Standard Phase 1 pipeline
-│   ├── run_lightweight.py              # Memory-optimized variant
-│   └── run_ultrasafe.py                # MacBook-safe variant
+├─ notebooks/
+│   ├─ Phase2A_Pretrained_Feature_Bank.ipynb     # one-shot Phase 3 Colab notebook
+│   └─ Phase2B_Final_Mountain.ipynb              # Phase 2B (parked, code retained)
 │
-├── notebooks/                          # Colab notebooks
-│   ├── Phase1_Classical_ML.ipynb       # Phase 1 classical ML pipeline
-│   ├── Phase2_Deep_Learning.ipynb      # Phase 2 deep learning pipeline
-│   ├── 01_eda.ipynb                    # Exploratory data analysis
-│   └── 02_feature_engineering.ipynb    # Feature engineering exploration
+├─ src/
+│   ├─ phase2a/
+│   │   ├─ config.py             # paths, splits, model names
+│   │   ├─ data.py               # manifest loaders, stratified splits
+│   │   ├─ embeddings.py         # AST / Whisper / handcrafted extractors
+│   │   ├─ classifiers.py        # RBF-SVM, LogReg, RF, prototype, prefit voting
+│   │   └─ auxiliary.py          # AST aux cry/non-cry adaptation utils
+│   └─ phase2b/                  # tuned-SVM, weighted ensemble, JEPA-lite (parked)
 │
-├── src/                                # Source modules
-│   ├── config.py                       # Central configuration
-│   ├── data_loader.py                  # Audio loading and splitting
-│   ├── augmentation.py                 # 17 audio augmentation techniques
-│   ├── feature_extractor.py            # 411-dim feature extraction
-│   ├── evaluation.py                   # Metrics, plots, model comparison
-│   ├── gmm_classifier.py              # Gaussian Mixture Model
-│   ├── svm_classifier.py              # SVM with SMOTE + OvO
-│   ├── hmm_model.py                   # Hidden Markov Model
-│   ├── rf_classifier.py               # Random Forest
-│   ├── xgb_classifier.py              # XGBoost
-│   ├── ensemble_classifier.py         # Stacking Ensemble
-│   └── phase2/                         # Phase 2 deep learning modules
-│       ├── config.py                   # DL hyperparameters
-│       ├── models.py                   # CNN + BiLSTM + Attention
-│       ├── trainer.py                  # Training loop (LDAM + DRW)
-│       ├── losses.py                   # LDAM loss, DRW scheduler
-│       ├── data_pipeline.py            # GroupShuffleSplit, augmentation
-│       ├── features.py                 # Mel-spectrogram + domain features
-│       ├── evaluation.py               # DL evaluation metrics
-│       ├── hybrid.py                   # Hybrid weighted ensemble
-│       ├── distillation.py             # Knowledge distillation + INT8
-│       └── interpretability.py         # Grad-CAM, attention maps
+├─ scripts/
+│   ├─ phase_a_ingest_external.py
+│   ├─ phase_a_prepare_data.py
+│   ├─ phase2a_auxiliary_adaptation.py
+│   ├─ phase2a_feature_bank.py
+│   ├─ phase2a_build_feature_sets.py
+│   ├─ phase2a_train_classifiers.py
+│   ├─ phase2a_repeated_evaluation.py
+│   ├─ package_phase2a_colab.py
+│   ├─ phase3_distill_edge_student.py     # multi-teacher KD onto EfficientAT
+│   └─ phase3_make_figures.py             # publication figures
 │
-├── data/raw/                           # Original audio files by class
-│   ├── hunger/          382 files
-│   ├── discomfort/       27 files
-│   ├── tiredness/        24 files
-│   ├── belly_pain/       16 files
-│   └── burping/           8 files
+├─ reports/
+│   ├─ phase1_report/                     # legacy
+│   ├─ phase2_report/                     # legacy
+│   ├─ presentation/                      # Phase 2 deck
+│   ├─ phase3_report/
+│   │   ├─ phase3_report.{tex,pdf}        # IEEE-style Phase 3 report
+│   │   └─ figures/                       # 9 publication figures + repeated_eval_summary.csv
+│   └─ phase3_presentation/
+│       └─ presentation.html              # 20-slide story deck
 │
-├── results/                            # Evaluation outputs
-│   ├── phase1_corrected/               # Leak-free Phase 1 results
-│   └── phase2/                         # Phase 2 DL + hybrid results
+├─ results/
+│   ├─ phase1_corrected/                  # leak-free Phase 1
+│   ├─ phase1_leaky/                      # quarantined for transparency
+│   ├─ phase2/                            # Phase 2 metrics + plots
+│   └─ phase2a/                           # populated by the Colab run (gitignored)
 │
-├── reports/                            # LaTeX reports and presentation
-│   ├── phase1_report/
-│   ├── phase2_report/
-│   └── presentation/
-│
-├── docs/                               # Documentation and rubrics
-├── requirements.txt
-└── setup.sh
+├─ requirements-phase2a.txt
+└─ README.md
 ```
+
+> The 914 MB `data_lake/` (raw + canonicalised audio, manifests, perceptual fingerprints) is git-ignored. The pipeline regenerates it from public sources.
 
 </details>
 
 <br>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
 
 <br>
 
-## <img src="https://img.shields.io/badge/08-0F766E?style=flat-square" height="24" /> &nbsp; Getting Started
+## <img src="https://img.shields.io/badge/10-0F766E?style=flat-square" height="22" /> &nbsp; Quickstart
+
+### Run the full Phase 3 pipeline on Colab _(recommended — uses a free T4)_
+
+1. Mount Drive and clone the repo into Drive.
+2. Open [`notebooks/Phase2A_Pretrained_Feature_Bank.ipynb`](notebooks/Phase2A_Pretrained_Feature_Bank.ipynb) in Colab.
+3. Run top-to-bottom. The notebook walks through:
+
+   ```
+   ▸ install deps                    ▸ build the multi-view feature bank
+   ▸ verify manifests + splits        ▸ run 5-seed repeated evaluation
+   ▸ AST aux cry/non-cry adaptation   ▸ Phase 3 edge distillation (mn10 + mn04)
+   ▸ extract AST + Whisper features   ▸ generate publication figures
+   ```
+
+   Total wall-clock on a free T4: ~30 min for the teacher pipeline, ~35–60 min for both edge variants.
+
+### Run components locally
 
 ```bash
-# Clone
 git clone https://github.com/BelalRaza/Infant-State-Recognition-System.git
 cd Infant-State-Recognition-System
+python3.10 -m venv venv && source venv/bin/activate
+pip install -r requirements-phase2a.txt
 
-# Environment
-python3.10 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+# 1. ingest, canonicalise, dedup the public cry sources
+python scripts/phase_a_ingest_external.py
+python scripts/phase_a_prepare_data.py
+
+# 2. (optional) auxiliary AST cry/non-cry adaptation
+python scripts/phase2a_auxiliary_adaptation.py
+
+# 3. build feature banks + train classifiers
+python scripts/phase2a_feature_bank.py
+python scripts/phase2a_build_feature_sets.py
+python scripts/phase2a_train_classifiers.py
+python scripts/phase2a_repeated_evaluation.py
+
+# 4. distil onto EfficientAT MobileNetV3
+python scripts/phase3_distill_edge_student.py --variant mn10_as --n-seeds 5
+python scripts/phase3_distill_edge_student.py --variant mn04_as --n-seeds 5
+
+# 5. publication figures + report PDF
+python scripts/phase3_make_figures.py --results-dir results/phase2a
+cd reports/phase3_report && pdflatex phase3_report.tex && pdflatex phase3_report.tex
 ```
 
 <br>
 
-**Run locally:**
-
-```bash
-# Phase 1 — standard pipeline
-python pipelines/run_pipeline.py
-
-# Phase 1 — memory-safe variant for MacBook
-python pipelines/run_ultrasafe.py
-```
-
-**Run on Colab** _(recommended)_:
-
-Upload `notebooks/Phase1_Classical_ML.ipynb` or `notebooks/Phase2_Deep_Learning.ipynb` to [Google Colab](https://colab.research.google.com).
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
 
 <br>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
+## <img src="https://img.shields.io/badge/11-0F766E?style=flat-square" height="22" /> &nbsp; What was deliberately not done
+
+This section is here on purpose — papers that hide their negative space are not trustworthy.
+
+- **No end-to-end fine-tuning of AST on the 5-class task.** With n=34 and n=26 ultra-rare classes, full fine-tuning blows up the variance. We adapt AST only on the binary cry/non-cry auxiliary task.
+- **No JEPA / self-supervised pretraining in the deliverables.** The Phase 2B AudioJEPA-lite + multi-view teacher work is parked under `src/phase2b/` and `scripts/phase2b_*.py` and not part of the Phase 3 submission.
+- **No cross-site evaluation.** 5-seed mean ± std is over splits, not over independent recording sites — listed under future work.
+- **No synthetic generative augmentation** of belly_pain or burping. Worth trying, deliberately out of scope.
 
 <br>
 
-## <img src="https://img.shields.io/badge/09-0F766E?style=flat-square" height="24" /> &nbsp; References
-
-1. Dunstan, P. (2006). *Dunstan Baby Language* — five universal cry categories.
-2. Ji, C. et al. (2021). A review of infant cry analysis and classification. *EURASIP Journal on Audio, Speech, and Music Processing.*
-3. Cao, K. et al. (2019). Learning Imbalanced Datasets with Label-Distribution-Aware Margin Loss. *NeurIPS 2019.*
-4. McFee, B. et al. *Librosa: Audio and music signal analysis in Python.* [librosa.org](https://librosa.org/doc/latest/)
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
 
 <br>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=0F766E&height=2" />
+## <img src="https://img.shields.io/badge/12-0F766E?style=flat-square" height="22" /> &nbsp; References
+
+1. Gong, Y., Chung, Y.-A., Glass, J. **AST: Audio Spectrogram Transformer.** _Interspeech 2021._
+2. Radford, A. et al. **Robust Speech Recognition via Large-Scale Weak Supervision (Whisper).** _ICML 2023._
+3. Schmid, F., Koutini, K., Widmer, G. **Efficient Large-Scale Audio Tagging via Transformer-to-CNN Knowledge Distillation (EfficientAT).** _ICASSP 2023._ &nbsp;[[code]](https://github.com/fschmid56/EfficientAT)
+4. Hinton, G., Vinyals, O., Dean, J. **Distilling the Knowledge in a Neural Network.** _arXiv:1503.02531, 2015._
+5. Cao, K. et al. **Learning Imbalanced Datasets with Label-Distribution-Aware Margin Loss (LDAM).** _NeurIPS 2019._
+6. Ji, C. et al. **A review of infant cry analysis and classification.** _EURASIP J. Audio, Speech, Music Processing, 2021._
+7. Dunstan, P. (2006). _Dunstan Baby Language_ — five universal cry categories.
+
+<br>
+
+<img width="100%" src="https://capsule-render.vercel.app/api?type=rect&color=gradient&customColorList=12&height=2" />
 
 <br>
 
 <div align="center">
 
-<sub>Developed for academic coursework — University project on infant state recognition through audio analysis.</sub>
+<sub><b>Authors</b></sub>
+<br>
+<sub>Meghavi Rao &nbsp;<code>230044</code> &nbsp;·&nbsp; Belal Raza &nbsp;<code>230094</code></sub>
+<br>
+<sub>6th Semester &nbsp;·&nbsp; Deep Learning &amp; Advanced Machine Learning &nbsp;·&nbsp; Project 3 &nbsp;·&nbsp; 2026</sub>
 
-<br>
-<br>
+<br><br>
+
+<sub>Built for clinics, NICUs, and home monitors that don't have a server farm in the next room.</sub>
 
 </div>
 
-<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=0F766E&height=120&section=footer" />
+<img width="100%" src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12&height=120&section=footer" />
