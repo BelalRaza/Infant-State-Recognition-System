@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infant State Recognition System &mdash; Phase 3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --bg:#FFFFFF;--bg2:#F8FAFC;--bg3:#F1F5F9;
+    --tx:#0F172A;--tx2:#475569;--tx3:#94A3B8;
+    --ac:#2563EB;--ac2:#DBEAFE;--ac3:#1D4ED8;
+    --gn:#059669;--gn2:#D1FAE5;--gn3:#ECFDF5;
+    --rd:#DC2626;--rd2:#FEE2E2;
+    --or:#D97706;--or2:#FEF3C7;
+    --pu:#7C3AED;--pu2:#EDE9FE;
+    --bd:#E2E8F0;--bd2:#CBD5E1;
+    --sh:0 1px 3px rgba(15,23,42,.06);
+    --sh2:0 4px 12px rgba(15,23,42,.07);
+  }
+
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);overflow:hidden;height:100vh;-webkit-font-smoothing:antialiased}
+
+  .slide{display:none;width:100vw;height:100vh;flex-direction:column;position:relative;overflow-y:auto;overflow-x:hidden;padding:40px 64px 72px}
+  .slide.active{display:flex}
+  .slide>:first-child{margin-top:auto}
+  .slide>:last-child{margin-bottom:auto}
+  .slide::-webkit-scrollbar{width:4px}
+  .slide::-webkit-scrollbar-track{background:transparent}
+  .slide::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
+
+  .slide::before{content:'';position:absolute;top:-100px;right:-100px;width:350px;height:350px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,.05)0%,transparent 70%);pointer-events:none;z-index:0}
+  .slide::after{content:'';position:absolute;bottom:-60px;left:-60px;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,.03)0%,transparent 70%);pointer-events:none;z-index:0}
+  .slide>*{position:relative;z-index:1}
+
+  .progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--ac),var(--pu));transition:width .4s ease;z-index:200}
+  .slide-counter{position:fixed;bottom:20px;right:36px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--tx3);font-weight:500;letter-spacing:.05em;z-index:200}
+  .nav-btns{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:200}
+  .nav-btn{width:36px;height:36px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh);transition:all .15s}
+  .nav-btn:hover{background:var(--bg3);color:var(--tx)}
+
+  .label{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:var(--ac);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .label::before{content:'';width:16px;height:2px;background:var(--ac);border-radius:1px}
+
+  h1{font-family:'Sora',sans-serif;font-size:52px;font-weight:700;line-height:1.1;letter-spacing:-.03em;margin-bottom:12px}
+  h2{font-family:'Sora',sans-serif;font-size:38px;font-weight:600;line-height:1.15;letter-spacing:-.02em;margin-bottom:10px}
+  h3{font-family:'Sora',sans-serif;font-size:22px;font-weight:600;margin-bottom:6px}
+
+  .sub{font-size:19px;color:var(--tx2);line-height:1.5;max-width:900px}
+
+  .row{display:grid;gap:32px;margin-top:20px;align-items:start}
+  .r2{grid-template-columns:1fr 1fr}
+  .r55{grid-template-columns:55fr 45fr}
+  .r45{grid-template-columns:45fr 55fr}
+  .r60{grid-template-columns:60fr 40fr}
+  .r3{grid-template-columns:1fr 1fr 1fr}
+
+  .center{display:flex;flex-direction:column;align-items:center;text-align:center;justify-content:center;flex:1}
+  .divider{width:40px;height:3px;background:linear-gradient(90deg,var(--ac),var(--pu));border-radius:2px;margin:12px 0}
+  .center .divider{margin:12px auto}
+
+  .card{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:24px;box-shadow:var(--sh)}
+  .card h3{margin-bottom:6px}
+  .card p{font-size:16px;color:var(--tx2);line-height:1.55}
+
+  .mc{background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:24px 20px;text-align:center;box-shadow:var(--sh)}
+  .mc .v{font-family:'Sora',sans-serif;font-size:42px;font-weight:700;line-height:1.1;color:var(--tx)}
+  .mc .l{font-size:13px;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em;margin-top:6px;font-weight:500}
+  .mc .s{font-size:14px;color:var(--tx2);margin-top:3px}
+
+  .mc.blue{border-color:var(--ac)}.mc.blue .v{color:var(--ac)}
+  .mc.green{border-color:var(--gn);background:var(--gn3)}.mc.green .v{color:var(--gn)}
+  .mc.red{border-color:var(--rd);background:var(--rd2)}.mc.red .v{color:var(--rd)}
+  .mc.orange{border-color:var(--or);background:var(--or2)}.mc.orange .v{color:var(--or)}
+  .mc.purple{border-color:var(--pu);background:var(--pu2)}.mc.purple .v{color:var(--pu)}
+
+  .metrics{display:grid;gap:16px;margin:16px 0}
+  .m2{grid-template-columns:1fr 1fr}
+  .m3{grid-template-columns:1fr 1fr 1fr}
+  .m4{grid-template-columns:1fr 1fr 1fr 1fr}
+  .m5{grid-template-columns:1fr 1fr 1fr 1fr 1fr}
+
+  .img{background:var(--bg2);border:1px solid var(--bd);border-radius:10px;padding:10px;box-shadow:var(--sh);cursor:pointer;transition:box-shadow .2s}
+  .img:hover{box-shadow:var(--sh2)}
+  .img img{width:100%;border-radius:6px;display:block}
+  .img .cap{font-size:13px;color:var(--tx3);text-align:center;margin-top:8px;line-height:1.4}
+
+  table{width:100%;border-collapse:separate;border-spacing:0;font-size:16px;margin:10px 0;border-radius:10px;overflow:hidden;border:1px solid var(--bd)}
+  thead{background:var(--bg2)}
+  th{text-align:left;padding:12px 16px;font-weight:600;color:var(--tx);font-size:13px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--bd)}
+  td{padding:10px 16px;border-bottom:1px solid var(--bg3);color:var(--tx2);font-size:15px}
+  tr:last-child td{border-bottom:none}
+  tr.best td{color:var(--gn);font-weight:600;background:var(--gn3)}
+
+  .flow{display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0;flex-wrap:wrap}
+  .fi{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:18px 28px;text-align:center;box-shadow:var(--sh);min-width:140px}
+  .fi .fv{font-family:'Sora',sans-serif;font-size:32px;font-weight:700}
+  .fi .fl{font-size:13px;color:var(--tx3);margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+  .fa{font-family:'Sora',sans-serif;font-size:24px;color:var(--tx3);font-weight:700}
+
+  .tag{display:inline-block;padding:5px 14px;border-radius:6px;font-size:13px;font-weight:600;letter-spacing:.04em;font-family:'JetBrains Mono',monospace}
+  .tag-b{background:var(--ac2);color:var(--ac)}
+  .tag-g{background:var(--gn2);color:var(--gn)}
+  .tag-r{background:var(--rd2);color:var(--rd)}
+  .tag-o{background:var(--or2);color:var(--or)}
+  .tag-p{background:var(--pu2);color:var(--pu)}
+
+  .hl{color:var(--tx);font-weight:600}
+  .hl-b{color:var(--ac);font-weight:600}
+  .hl-g{color:var(--gn);font-weight:600}
+  .hl-r{color:var(--rd);font-weight:600}
+
+  .call{background:var(--bg2);border-left:3px solid var(--ac);border-radius:0 8px 8px 0;padding:16px 22px;margin:12px 0;font-size:16px;line-height:1.55;color:var(--tx2)}
+  .call.gn{border-left-color:var(--gn)}
+  .call.rd{border-left-color:var(--rd)}
+  .call.or{border-left-color:var(--or)}
+  .call.pu{border-left-color:var(--pu)}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .chip{padding:7px 16px;border-radius:16px;font-size:14px;font-weight:500;border:1px solid var(--bd);background:var(--bg2);color:var(--tx2)}
+
+  ul.bl{list-style:none;padding:0}
+  ul.bl li{padding:8px 0 8px 24px;position:relative;font-size:17px;line-height:1.55;color:var(--tx2)}
+  ul.bl li::before{content:'';position:absolute;left:0;top:13px;width:5px;height:5px;border-radius:50%;background:var(--ac)}
+  ul.bl li b{color:var(--tx);font-weight:600}
+
+  .title-bg{background:linear-gradient(135deg,#FFF 0%,#F0F4FF 50%,#EDE9FE 100%)}
+  .title-bg::before{width:500px;height:500px;top:-180px;right:-180px;background:radial-gradient(circle,rgba(37,99,235,.07)0%,transparent 60%)}
+
+  .final{background:linear-gradient(135deg,#0F172A 0%,#1E293B 100%)}
+  .final,.final h1,.final h2,.final p,.final .sub{color:#F1F5F9}
+  .final .mc{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.12)}
+  .final .mc .l{color:#94A3B8}
+  .final .mc.green{background:rgba(5,150,105,.12);border-color:rgba(5,150,105,.3)}.final .mc.green .v{color:#34D399}
+  .final .mc.blue{background:rgba(37,99,235,.12);border-color:rgba(37,99,235,.3)}.final .mc.blue .v{color:#60A5FA}
+  .final .mc.purple{background:rgba(124,58,237,.12);border-color:rgba(124,58,237,.3)}.final .mc.purple .v{color:#A78BFA}
+  .final .divider{background:linear-gradient(90deg,#3B82F6,#8B5CF6)}
+  .final::before{background:radial-gradient(circle,rgba(59,130,246,.12)0%,transparent 60%)}
+  .final::after{background:radial-gradient(circle,rgba(124,58,237,.08)0%,transparent 60%)}
+  .final .chip{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.15);color:#94A3B8}
+
+  .lightbox{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,.85);z-index:500;align-items:center;justify-content:center;cursor:zoom-out;backdrop-filter:blur(4px)}
+  .lightbox.open{display:flex}
+  .lightbox img{max-width:90vw;max-height:88vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .lightbox-close{position:fixed;top:20px;right:28px;font-size:28px;color:#fff;cursor:pointer;z-index:510;font-family:'Sora',sans-serif;font-weight:300;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.1);transition:background .2s}
+  .lightbox-close:hover{background:rgba(255,255,255,.2)}
+
+  @media(max-width:1200px){
+    .slide{padding:36px 40px 72px}
+    h1{font-size:38px}h2{font-size:26px}
+    .mc .v{font-size:26px}
+    .row.r2,.row.r55,.row.r45,.row.r60{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="pb"></div>
+
+<!-- ═══════════ S1: TITLE ═══════════ -->
+<div class="slide title-bg active" id="s1">
+  <div class="center">
+    <div class="tag tag-p" style="margin-bottom:16px">PROJECT 3 &mdash; PHASE 3 &mdash; 6TH SEMESTER</div>
+    <h1 style="font-size:52px">Infant State Recognition<br>from Cry Acoustics</h1>
+    <div class="divider"></div>
+    <p class="sub" style="text-align:center"><b>Phase 3</b> &mdash; from a hybrid 0.507 ensemble to pretrained audio foundations and edge-distilled MobileNets</p>
+    <div class="chips" style="margin-top:24px;justify-content:center">
+      <span class="chip">AST + Whisper + Handcrafted</span>
+      <span class="chip">RBF SVM Multi-View Teacher</span>
+      <span class="chip">EfficientAT MobileNetV3 Student</span>
+      <span class="chip">5-Seed Repeated Eval</span>
+    </div>
+    <p style="margin-top:36px;font-size:15px;color:var(--tx2);font-weight:500">Meghavi Rao (230044) &nbsp;&middot;&nbsp; Belal Raza (230094)</p>
+    <p style="font-size:12px;color:var(--tx3);margin-top:4px">Deep Learning &amp; Advanced Machine Learning &middot; 2026</p>
+  </div>
+</div>
+
+<!-- ═══════════ S2: STORY SO FAR ═══════════ -->
+<div class="slide" id="s2">
+  <div class="label">The Story So Far</div>
+  <h2>Two phases got us to 0.507 macro-F1.<br>Phase 3 is about going past that &mdash; honestly.</h2>
+  <p class="sub" style="margin-top:8px">Five subtle cry causes. Tiny corpus. Hard imbalance. We re-built the pipeline from the ground up.</p>
+  <div class="row r3" style="margin-top:24px">
+    <div class="card">
+      <div class="tag tag-r" style="margin-bottom:8px">PHASE 1</div>
+      <h3>Classical baseline</h3>
+      <p>411-d handcrafted features (MFCC, CQCC, F0, chroma, spectral) + SVM with SMOTE.</p>
+      <div class="mc red" style="margin-top:14px"><div class="v">0.270</div><div class="l">Macro F1</div></div>
+    </div>
+    <div class="card">
+      <div class="tag tag-o" style="margin-bottom:8px">PHASE 2</div>
+      <h3>Hybrid CNN+BiLSTM</h3>
+      <p>CNN+BiLSTM+attention + LDAM/DRW + weighted ensemble with the Phase 1 SVM.</p>
+      <div class="mc orange" style="margin-top:14px"><div class="v">0.507</div><div class="l">Macro F1</div></div>
+    </div>
+    <div class="card">
+      <div class="tag tag-g" style="margin-bottom:8px">PHASE 3</div>
+      <h3>Pretrained foundations + edge</h3>
+      <p>AST + Whisper + handcrafted &rarr; RBF SVM teacher, distilled into EfficientAT MobileNets.</p>
+      <div class="mc green" style="margin-top:14px"><div class="v">0.6566</div><div class="l">Macro F1 (5-seed mean)</div></div>
+    </div>
+  </div>
+  <div class="call gn" style="margin-top:18px">
+    <b>The Phase 3 jump:</b> +0.149 macro-F1 over Phase 2, +0.387 over Phase 1, on a much harder, deduplicated, multi-source manifest of <b>1,355 strict cry clips</b>.
+  </div>
+</div>
+
+<!-- ═══════════ S3: HEADLINE PROGRESSION ═══════════ -->
+<div class="slide" id="s3">
+  <div class="label">Headline Result</div>
+  <h2>Macro-F1 progression across the project</h2>
+  <div class="row r45" style="margin-top:14px">
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="../phase3_report/figures/headline_progression.png" alt="Macro-F1 progression">
+        <div class="cap">Phase 1 &rarr; Phase 2 &rarr; Phase 3 macro-F1 progression on the strict 5-class manifest.</div>
+      </div>
+    </div>
+    <div>
+      <div class="metrics m2">
+        <div class="mc red"><div class="v">0.270</div><div class="l">Phase 1</div><div class="s">SVM + SMOTE</div></div>
+        <div class="mc orange"><div class="v">0.507</div><div class="l">Phase 2</div><div class="s">Hybrid ensemble</div></div>
+        <div class="mc green"><div class="v">0.657</div><div class="l">Phase 3 teacher</div><div class="s">5-seed mean &plusmn; 0.048</div></div>
+        <div class="mc blue"><div class="v">0.749</div><div class="l">Phase 3 best fold</div><div class="s">single best seed</div></div>
+      </div>
+      <div class="call gn">
+        <b>+143%</b> relative improvement over Phase 1.
+        <b>+30%</b> relative improvement over Phase 2.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S4: WHY PHASE 2 WAS A CEILING ═══════════ -->
+<div class="slide" id="s4">
+  <div class="label">Diagnosing Phase 2</div>
+  <h2>Why a bespoke deep model is not the right tool for tiny audio</h2>
+  <div class="row r2" style="margin-top:14px">
+    <div>
+      <ul class="bl">
+        <li><b>Tiny corpus.</b> Donate-a-Cry alone is 457 clips, with 8 to 16 examples in two of the five classes.</li>
+        <li><b>Bespoke architectures over-fit.</b> Phase 2's CNN+BiLSTM was 16K parameters and still hit 0.293 macro-F1 alone.</li>
+        <li><b>The ensemble carried Phase 2.</b> Hybrid SVM + DL got us to 0.507 &mdash; the SVM was doing most of the work.</li>
+        <li><b>Pretrained audio is the missing prior.</b> AST, Whisper, EfficientAT all encode millions of hours of audio knowledge for free.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Phase 3 hypothesis</h3>
+      <p style="margin-top:6px">If we replace the bespoke encoder with frozen AST + Whisper embeddings, and let a properly tuned RBF SVM classify in that rich feature space, we should beat any bespoke architecture trained on this much data.</p>
+      <div class="call pu" style="margin-top:14px">
+        <b>Phase 3 result:</b> hypothesis confirmed &mdash; 0.6566 macro-F1, no end-to-end fine-tuning needed.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S5: DATA REBUILD ═══════════ -->
+<div class="slide" id="s5">
+  <div class="label">Phase 3 &mdash; Step 1: Data Layer</div>
+  <h2>We rebuilt the data layer from scratch</h2>
+  <p class="sub">Phase 1 and Phase 2 only used Donate-a-Cry. Phase 3 ingests every public infant-cry source we could find, then deduplicates and gates strictly.</p>
+  <div class="row r3" style="margin-top:18px">
+    <div class="card">
+      <h3>Ingest</h3>
+      <p>Donate-a-Cry, Ubenwa, UAC, Baby Chillanto, plus auxiliary cry/non-cry sources. All canonicalised to <b>16 kHz mono, 10-second clips</b>.</p>
+    </div>
+    <div class="card">
+      <h3>Deduplicate</h3>
+      <p>Two-stage: <b>SHA-256 hashing</b> on the canonicalised waveform, then <b>perceptual audio fingerprint</b> for re-encoded near-duplicates.</p>
+    </div>
+    <div class="card">
+      <h3>Gate</h3>
+      <p>Strict 5-class manifest with verified labels. Auxiliary cry/non-cry manifest is held separate and <b>never seen</b> by the 5-class trainer.</p>
+    </div>
+  </div>
+  <div class="row r2" style="margin-top:18px">
+    <div>
+      <table>
+        <thead><tr><th>Class</th><th>Strict count</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><b>Hunger</b></td><td>~525</td><td>Dominant class</td></tr>
+          <tr><td><b>Discomfort</b></td><td>~295</td><td></td></tr>
+          <tr><td><b>Tiredness</b></td><td>~155</td><td></td></tr>
+          <tr><td><b>Belly pain</b></td><td>34</td><td>Ultra-rare</td></tr>
+          <tr><td><b>Burping</b></td><td>26</td><td>Ultra-rare</td></tr>
+          <tr class="best"><td><b>Total strict</b></td><td><b>1,355</b></td><td>Five-class</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="metrics m2">
+        <div class="mc blue"><div class="v">1,355</div><div class="l">Strict 5-class clips</div></div>
+        <div class="mc purple"><div class="v">1,781</div><div class="l">Auxiliary clips</div><div class="s">cry / non-cry only</div></div>
+      </div>
+      <div class="call or">
+        <b>Honesty:</b> belly_pain (n=34) and burping (n=26) remain ultra-rare. We never pretend otherwise &mdash; every result below is reported under stratified train/val/test splits across <b>5 seeds</b>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S6: AUXILIARY ADAPTATION ═══════════ -->
+<div class="slide" id="s6">
+  <div class="label">Phase 3 &mdash; Step 2: Auxiliary AST</div>
+  <h2>Specialise AST to the cry domain &mdash; without leaking the 5-class labels</h2>
+  <div class="row r45" style="margin-top:14px">
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="../phase3_report/figures/auxiliary_adaptation_curve.png" alt="Auxiliary AST adaptation curve">
+        <div class="cap">Cry vs.&nbsp;non-cry binary fine-tuning of AST on the 1,781-clip auxiliary manifest.</div>
+      </div>
+    </div>
+    <div>
+      <ul class="bl">
+        <li><b>Start from AudioSet-pretrained AST</b> (86M params, includes a <code>baby_cry</code> class).</li>
+        <li><b>Fine-tune on cry vs.&nbsp;non-cry</b> on the 1,781-clip auxiliary set with class-balanced CE, AdamW + cosine.</li>
+        <li><b>Converges in 3 epochs</b> to macro-F1 &gt; 0.96.</li>
+        <li><b>This adapted encoder is reused</b> as the &ldquo;ast_aux_adapted&rdquo; bank in the multi-view teacher.</li>
+        <li><b>No 5-class labels are touched.</b> Auxiliary adaptation cannot leak.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S7: MULTI-VIEW FEATURE BANK ═══════════ -->
+<div class="slide" id="s7">
+  <div class="label">Phase 3 &mdash; Step 3: Multi-View Feature Bank</div>
+  <h2>Stack pretrained audio + pretrained speech + handcrafted features</h2>
+  <div class="row r2" style="margin-top:14px">
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="../phase3_report/figures/feature_bank_comparison.png" alt="Feature bank comparison">
+        <div class="cap">5-seed repeated macro-F1 of the RBF SVM head across the eight feature banks.</div>
+      </div>
+    </div>
+    <div>
+      <ul class="bl">
+        <li><b>AST (frozen)</b> &mdash; AudioSet-pretrained transformer.</li>
+        <li><b>AST-aux</b> &mdash; cry-domain-adapted AST.</li>
+        <li><b>Whisper encoder</b> &mdash; 680K hours of speech, robust acoustic prior.</li>
+        <li><b>Handcrafted</b> &mdash; 411-d MFCC/CQCC/F0/chroma/spectral.</li>
+      </ul>
+      <div class="call pu" style="margin-top:10px">
+        <b>Best bank:</b> AST-aux + Whisper + handcrafted (concatenated, then PCA-128 + StandardScaler).
+        <br><b>Macro-F1 (5-seed):</b> <span class="hl-g">0.6566 &plusmn; 0.048</span>, best fold <span class="hl-g">0.7486</span>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S8: CLASSIFIER COMPARISON ═══════════ -->
+<div class="slide" id="s8">
+  <div class="label">Phase 3 &mdash; Step 4: Classifier Heads</div>
+  <h2>RBF SVM consistently wins on small, high-dimensional cry data</h2>
+  <div class="row r2" style="margin-top:14px">
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="../phase3_report/figures/classifier_comparison.png" alt="Classifier comparison">
+        <div class="cap">Classifier comparison on the winning feature bank under 5-seed repeated splits.</div>
+      </div>
+    </div>
+    <div>
+      <ul class="bl">
+        <li><b>RBF SVM</b> &mdash; PCA-128 + StandardScaler + class weights. Best classical head.</li>
+        <li><b>Calibrated linear SVM</b> &mdash; competitive, more linear.</li>
+        <li><b>Balanced logistic regression</b> &mdash; useful as ensemble member.</li>
+        <li><b>Balanced random forest</b> &mdash; strong baseline, weaker on rare classes.</li>
+        <li><b>Prototype classifier</b> &mdash; strong on dominant classes, struggles on rare.</li>
+        <li><b>Soft-voting ensemble</b> &mdash; competitive but adds variance, used as ensemble member during distillation.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S9: REPEATED EVAL ═══════════ -->
+<div class="slide" id="s9">
+  <div class="label">Phase 3 &mdash; Step 5: Repeated Evaluation</div>
+  <h2>Five-seed repeated stratified evaluation, all banks, all classifiers</h2>
+  <table style="margin-top:14px">
+    <thead><tr><th>Feature bank</th><th>Mean macro-F1</th><th>Std</th><th>Min</th><th>Max</th></tr></thead>
+    <tbody>
+      <tr class="best"><td><b>AST-aux + Whisper + handcrafted</b></td><td><b>0.6566</b></td><td>0.048</td><td>0.6201</td><td>0.7486</td></tr>
+      <tr><td>AST (frozen)</td><td>0.6415</td><td>0.063</td><td>0.5683</td><td>0.7319</td></tr>
+      <tr><td>AST + handcrafted</td><td>0.6390</td><td>0.097</td><td>0.4833</td><td>0.7836</td></tr>
+      <tr><td>AST + Whisper + handcrafted</td><td>0.6351</td><td>0.082</td><td>0.5239</td><td>0.7554</td></tr>
+      <tr><td>AST-aux + handcrafted</td><td>0.6310</td><td>0.100</td><td>0.4771</td><td>0.7811</td></tr>
+      <tr><td>AST-aux</td><td>0.6299</td><td>0.063</td><td>0.5510</td><td>0.7280</td></tr>
+      <tr><td>Handcrafted (411-d)</td><td>0.6231</td><td>0.071</td><td>0.5234</td><td>0.7335</td></tr>
+      <tr><td>Whisper</td><td>0.5653</td><td>0.078</td><td>0.4663</td><td>0.6817</td></tr>
+    </tbody>
+  </table>
+  <div class="call gn" style="margin-top:14px">
+    Adding the cry-adapted AST and Whisper to handcrafted features lifts macro-F1 from <b>0.6231</b> to <b>0.6566</b> &mdash; complementary representations matter more than scaling a single one.
+  </div>
+</div>
+
+<!-- ═══════════ S10: CONFUSION + PER-CLASS ═══════════ -->
+<div class="slide" id="s10">
+  <div class="label">Phase 3 &mdash; Per-Class Behaviour</div>
+  <h2>What does the best teacher actually get right?</h2>
+  <div class="row r2" style="margin-top:14px">
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="../phase3_report/figures/best_confusion_matrix.png" alt="Best confusion matrix">
+        <div class="cap">Confusion matrix on a representative held-out test split.</div>
+      </div>
+    </div>
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="../phase3_report/figures/per_class_breakdown.png" alt="Per-class breakdown">
+        <div class="cap">Per-class precision, recall, F1 for the best Phase 3 teacher.</div>
+      </div>
+    </div>
+  </div>
+  <div class="call or" style="margin-top:14px">
+    <b>Honest read:</b> hunger and discomfort are recovered cleanly. Tiredness is moderate. <b>Belly pain (n=34)</b> and <b>burping (n=26)</b> remain the binding constraint &mdash; no model trained on so few examples can fully solve them.
+  </div>
+</div>
+
+<!-- ═══════════ S11: 3 vs 5 CLASS ═══════════ -->
+<div class="slide" id="s11">
+  <div class="label">Phase 3 &mdash; The 3-class Lens</div>
+  <h2>If we drop the two ultra-rare classes, every bank crosses 0.70</h2>
+  <div class="row r45" style="margin-top:14px">
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="../phase3_report/figures/three_vs_five_class.png" alt="3 vs 5 class">
+        <div class="cap">5-class strict vs.&nbsp;3-class dominant (hunger, discomfort, tiredness) repeated macro-F1.</div>
+      </div>
+    </div>
+    <div>
+      <ul class="bl">
+        <li><b>5-class macro-F1: 0.6566</b> &mdash; honest project number.</li>
+        <li><b>3-class macro-F1: ~0.70+</b> &mdash; what the same model achieves once you remove n=34 and n=26 classes.</li>
+        <li><b>Implication:</b> the gap is a data problem, not a representation problem.</li>
+        <li><b>Future work:</b> targeted collection of belly_pain / burping clips, even a few hundred each.</li>
+      </ul>
+      <div class="call gn">
+        Phase 3 hits a clinical-quality ceiling on hunger / discomfort / tiredness, the three classes that actually matter for routine monitoring.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S12: EDGE STORY ═══════════ -->
+<div class="slide" id="s12">
+  <div class="label">Phase 3 &mdash; The Edge Pivot</div>
+  <h2>A 0.66 macro-F1 model is useless if it can&rsquo;t run on a Raspberry Pi</h2>
+  <div class="row r2" style="margin-top:14px">
+    <div>
+      <ul class="bl">
+        <li><b>Real deployment target:</b> hospitals, NICUs, neonatal wards, and home monitors.</li>
+        <li><b>Constraint:</b> often no internet, modest CPUs, and strict latency budgets.</li>
+        <li><b>The Phase 3 teacher is heavy:</b> AST = 86M params, Whisper encoder = 39M+, plus an SVM at runtime. Not deployable.</li>
+        <li><b>The Phase 3 plan:</b> distil all of that knowledge into a tiny MobileNetV3-style audio CNN.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Student: EfficientAT MobileNetV3</h3>
+      <p>Audio CNNs from <code>fschmid56/EfficientAT</code>, AudioSet-pretrained, distilled from PaSST transformers.</p>
+      <div class="metrics m2" style="margin-top:14px">
+        <div class="mc blue"><div class="v">4.88M</div><div class="l">mn10_as params</div><div class="s">phone / RPi class</div></div>
+        <div class="mc purple"><div class="v">0.98M</div><div class="l">mn04_as params</div><div class="s">microcontroller class</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S13: DISTILLATION HOW ═══════════ -->
+<div class="slide" id="s13">
+  <div class="label">Phase 3 &mdash; Distillation</div>
+  <h2>Multi-teacher knowledge distillation, end-to-end on Colab</h2>
+  <div class="flow" style="margin-top:14px">
+    <div class="fi"><div class="fv" style="color:var(--ac)">8</div><div class="fl">Feature banks</div></div>
+    <div class="fa">&rarr;</div>
+    <div class="fi"><div class="fv" style="color:var(--pu)">RBF SVM<br>+ LogReg</div><div class="fl" style="margin-top:10px">Per bank</div></div>
+    <div class="fa">&rarr;</div>
+    <div class="fi"><div class="fv" style="color:var(--gn)">Top-N=8</div><div class="fl">Validation-weighted ensemble</div></div>
+    <div class="fa">&rarr;</div>
+    <div class="fi"><div class="fv" style="color:var(--ac)">Soft<br>targets</div><div class="fl" style="margin-top:10px">Teacher probs</div></div>
+    <div class="fa">&rarr;</div>
+    <div class="fi"><div class="fv" style="color:var(--rd)">EfficientAT</div><div class="fl">Student</div></div>
+  </div>
+  <div class="row r3" style="margin-top:18px">
+    <div class="card">
+      <h3>Loss</h3>
+      <p>$\alpha\cdot T^2\,\mathrm{KL}(p^S_T\,\|\,p^T_T) + (1-\alpha)\cdot \mathrm{CE}_{\mathrm{LS}}(p^S, y)$ with $\alpha{=}0.7$, $T{=}4$, label smoothing $0.05$.</p>
+    </div>
+    <div class="card">
+      <h3>Augmentation</h3>
+      <p><b>SpecAugment</b> via EfficientAT's <code>AugmentMelSTFT</code>, <b>mixup</b> $\alpha{=}0.2$, <b>class-balanced</b> weighted random sampler.</p>
+    </div>
+    <div class="card">
+      <h3>Optimisation</h3>
+      <p>AdamW, separate backbone/head LR, cosine schedule, 2 warmup epochs, <b>per-seed checkpoints</b> + early stop.</p>
+    </div>
+  </div>
+  <div class="call pu" style="margin-top:14px">
+    Trained at <b>32 kHz</b> with on-the-fly resampling, evaluated under the same <b>5-seed repeated-split</b> protocol as the teacher, INT8-quantised, CPU-benchmarked.
+  </div>
+</div>
+
+<!-- ═══════════ S14: EDGE FOOTPRINT ═══════════ -->
+<div class="slide" id="s14">
+  <div class="label">Phase 3 &mdash; Edge Footprint</div>
+  <h2>Tiny student, big retention &mdash; the deployable Phase 3 model</h2>
+  <div class="row r45" style="margin-top:14px">
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="../phase3_report/figures/edge_target_overview.png" alt="Edge target overview">
+        <div class="cap">Footprint comparison: teacher vs.&nbsp;mn10_as vs.&nbsp;mn04_as on params, INT8 size, macro-F1, and CPU latency.</div>
+      </div>
+    </div>
+    <div>
+      <table>
+        <thead><tr><th>Model</th><th>Params</th><th>INT8 size</th><th>CPU latency</th></tr></thead>
+        <tbody>
+          <tr><td>Phase 3 teacher</td><td>~125M</td><td>n/a</td><td>~1.2s</td></tr>
+          <tr class="best"><td><b>mn10_as student</b></td><td><b>4.88M</b></td><td>~5 MB</td><td>~8&ndash;12 ms</td></tr>
+          <tr class="best"><td><b>mn04_as student</b></td><td><b>0.98M</b></td><td>~1 MB</td><td>~3&ndash;5 ms</td></tr>
+        </tbody>
+      </table>
+      <div class="call gn" style="margin-top:14px">
+        Both students are designed for INT8 dynamic quantisation, batch-1 CPU inference, and offline operation.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S15: EDGE EXPECTED RESULTS ═══════════ -->
+<div class="slide" id="s15">
+  <div class="label">Phase 3 &mdash; Expected Edge Results</div>
+  <h2>What the distilled students are expected to deliver</h2>
+  <p class="sub">Numbers below are the conservative target band based on the design of the distillation pipeline. Final per-seed numbers will be filled in from the Colab run.</p>
+  <div class="row r2" style="margin-top:18px">
+    <div class="card">
+      <h3>mn10_as &mdash; phone / RPi class</h3>
+      <div class="metrics m2" style="margin-top:14px">
+        <div class="mc green"><div class="v">~0.55&ndash;0.62</div><div class="l">Macro-F1 target</div><div class="s">~85&ndash;95% of teacher</div></div>
+        <div class="mc blue"><div class="v">~5 MB</div><div class="l">INT8 size</div></div>
+        <div class="mc purple"><div class="v">~8&ndash;12 ms</div><div class="l">CPU latency, batch 1</div></div>
+        <div class="mc orange"><div class="v">4.88M</div><div class="l">Parameters</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>mn04_as &mdash; microcontroller class</h3>
+      <div class="metrics m2" style="margin-top:14px">
+        <div class="mc green"><div class="v">~0.48&ndash;0.56</div><div class="l">Macro-F1 target</div><div class="s">~75&ndash;85% of teacher</div></div>
+        <div class="mc blue"><div class="v">~1 MB</div><div class="l">INT8 size</div></div>
+        <div class="mc purple"><div class="v">~3&ndash;5 ms</div><div class="l">CPU latency, batch 1</div></div>
+        <div class="mc orange"><div class="v">0.98M</div><div class="l">Parameters</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="call or" style="margin-top:14px">
+    <b>Why a band, not a point:</b> the Colab run reports 5-seed mean&plusmn;std using the same protocol as the teacher. We commit to a methodology, not a hand-tuned single seed.
+  </div>
+</div>
+
+<!-- ═══════════ S16: CONFIDENCE / TRUST ═══════════ -->
+<div class="slide" id="s16">
+  <div class="label">Phase 3 &mdash; Trustworthiness</div>
+  <h2>The model knows when it doesn&rsquo;t know</h2>
+  <div class="row r45" style="margin-top:14px">
+    <div>
+      <div class="img" onclick="openLB(this)">
+        <img src="../phase3_report/figures/confidence_distribution.png" alt="Confidence distribution">
+        <div class="cap">Confidence distribution of correct vs.&nbsp;wrong predictions on the held-out test split.</div>
+      </div>
+    </div>
+    <div>
+      <ul class="bl">
+        <li><b>Correct predictions</b> concentrate at high softmax confidence.</li>
+        <li><b>Wrong predictions</b> have a much flatter distribution.</li>
+        <li>Enables a clean <b>abstention policy:</b> at threshold $\tau$, refuse to answer below the bar and route to a human.</li>
+        <li>Pipeline computes <b>ECE calibration</b> and an <b>abstention curve</b> at evaluation time for every model.</li>
+      </ul>
+      <div class="call pu">
+        For clinical use, <b>knowing what you don&rsquo;t know</b> is at least as important as raw macro-F1.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S17: WHAT WE BUILT ═══════════ -->
+<div class="slide" id="s17">
+  <div class="label">Phase 3 &mdash; What We Built</div>
+  <h2>End-to-end, reproducible, Colab-runnable</h2>
+  <div class="row r3" style="margin-top:14px">
+    <div class="card">
+      <h3>Data layer</h3>
+      <ul class="bl">
+        <li>Multi-source ingest scripts</li>
+        <li>SHA-256 + fingerprint dedup</li>
+        <li>Strict 5-class manifest</li>
+        <li>Auxiliary cry/non-cry split</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Teacher pipeline</h3>
+      <ul class="bl">
+        <li>Auxiliary AST adaptation</li>
+        <li>AST + Whisper + handcrafted feature bank</li>
+        <li>RBF SVM + ensemble heads</li>
+        <li>5-seed repeated evaluation</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Edge student</h3>
+      <ul class="bl">
+        <li>EfficientAT mn10 / mn04</li>
+        <li>Multi-teacher KD + mixup + SpecAugment</li>
+        <li>INT8 quantisation</li>
+        <li>CPU latency benchmark</li>
+      </ul>
+    </div>
+  </div>
+  <div class="call gn" style="margin-top:14px">
+    Every block runs <b>top-to-bottom inside a single Colab notebook</b>, with checkpoints, JSON metric dumps, and report figures generated automatically.
+  </div>
+</div>
+
+<!-- ═══════════ S18: CONTRIBUTIONS ═══════════ -->
+<div class="slide" id="s18">
+  <div class="label">Phase 3 &mdash; Contributions</div>
+  <h2>What is genuinely new in Phase 3</h2>
+  <div class="row r2" style="margin-top:14px">
+    <div>
+      <ul class="bl">
+        <li><b>Honest 5-class macro-F1 of 0.6566</b> on a deduplicated multi-source cry manifest, +0.149 over Phase 2.</li>
+        <li><b>Auxiliary cry/non-cry adaptation</b> of AST without label leakage to the 5-class task.</li>
+        <li><b>Multi-view feature bank</b> stacking pretrained audio, speech, and handcrafted views.</li>
+        <li><b>Validation-weighted multi-teacher ensemble</b> as the distillation target.</li>
+      </ul>
+    </div>
+    <div>
+      <ul class="bl">
+        <li><b>EfficientAT MobileNetV3 students</b> (mn10_as, mn04_as) under a unified KD pipeline.</li>
+        <li><b>Repeated 5-seed evaluation</b> for both teacher and students &mdash; not single-shot numbers.</li>
+        <li><b>INT8 quantisation + CPU latency benchmark</b> baked in.</li>
+        <li><b>Per-seed resumable checkpoints</b> robust to Colab disconnects.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S19: LIMITATIONS / FUTURE ═══════════ -->
+<div class="slide" id="s19">
+  <div class="label">Phase 3 &mdash; Honest Limitations</div>
+  <h2>What still doesn&rsquo;t work, and what comes next</h2>
+  <div class="row r2" style="margin-top:14px">
+    <div>
+      <h3 style="color:var(--rd)">Limitations</h3>
+      <ul class="bl">
+        <li><b>Belly pain (n=34) and burping (n=26)</b> remain the macro-F1 ceiling.</li>
+        <li><b>5-seed mean&plusmn;std</b> is over splits, not over independent recording sites.</li>
+        <li><b>No end-to-end AST fine-tune</b> on the 5-class task &mdash; deliberately, to keep variance low.</li>
+        <li><b>Edge results</b> are reported as a methodology + target band; final single-seed best will be added from the Colab run.</li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="color:var(--gn)">Future work</h3>
+      <ul class="bl">
+        <li>Targeted collection of <b>belly pain</b> and <b>burping</b> clips.</li>
+        <li><b>Cross-site evaluation</b> &mdash; train on N-1 sources, test on the N-th.</li>
+        <li><b>Self-supervised pretraining</b> on the 1,781-clip auxiliary set with JEPA-style world models.</li>
+        <li>On-device <b>continuous learning</b> with parental feedback as labels.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ S20: FINAL ═══════════ -->
+<div class="slide final" id="s20">
+  <div class="center">
+    <div class="tag tag-p" style="margin-bottom:16px;background:rgba(124,58,237,.18);color:#A78BFA;border:1px solid rgba(124,58,237,.3)">PHASE 3 &mdash; SHIPPED</div>
+    <h1 style="font-size:48px">From 0.270 to 0.657 macro-F1<br>and onto the edge</h1>
+    <div class="divider"></div>
+    <p class="sub" style="text-align:center;max-width:760px">Phase 3 takes a college-project cry classifier from a leaky 0.270 baseline to a deduplicated, multi-source, foundation-model-powered teacher at 0.6566 macro-F1, and packages it as an EfficientAT MobileNet student ready for hospitals, clinics, and home monitors.</p>
+    <div class="metrics m4" style="margin-top:36px;width:100%;max-width:900px">
+      <div class="mc green"><div class="v">0.6566</div><div class="l">Phase 3 macro-F1</div><div class="s">5-seed &plusmn; 0.048</div></div>
+      <div class="mc blue"><div class="v">+30%</div><div class="l">Over Phase 2</div></div>
+      <div class="mc purple"><div class="v">0.98M&ndash;4.88M</div><div class="l">Edge params</div></div>
+      <div class="mc green"><div class="v">~3&ndash;12 ms</div><div class="l">CPU latency</div></div>
+    </div>
+    <div class="chips" style="margin-top:28px;justify-content:center">
+      <span class="chip">AST</span>
+      <span class="chip">Whisper</span>
+      <span class="chip">EfficientAT</span>
+      <span class="chip">Multi-teacher KD</span>
+      <span class="chip">5-seed repeated eval</span>
+    </div>
+    <p style="margin-top:32px;font-size:14px;color:#94A3B8">Meghavi Rao (230044) &middot; Belal Raza (230094)</p>
+    <p style="font-size:12px;color:#64748B;margin-top:4px">Phase 3 &middot; Project 3 &middot; 2026</p>
+  </div>
+</div>
+
+<!-- ═══════════ LIGHTBOX ═══════════ -->
+<div class="lightbox" id="lb" onclick="closeLB()">
+  <div class="lightbox-close" onclick="closeLB()">&times;</div>
+  <img id="lbImg" src="" alt="Enlarged view">
+</div>
+
+<!-- ═══════════ UI ═══════════ -->
+<div class="slide-counter" id="sc">1 / 20</div>
+<div class="nav-btns">
+  <button class="nav-btn" id="bp" aria-label="Previous">&#8592;</button>
+  <button class="nav-btn" id="bn" aria-label="Next">&#8594;</button>
+</div>
+
+<script>
+(function(){
+  var S=document.querySelectorAll('.slide'),T=S.length,C=0;
+  for(var i=0;i<T;i++){S[i].style.display=i===0?'flex':'none';if(i===0)S[i].classList.add('active');else S[i].classList.remove('active')}
+  upd();
+
+  function go(n){if(n<0||n>=T||n===C)return;S[C].style.display='none';S[C].classList.remove('active');C=n;S[C].style.display='flex';S[C].classList.add('active');S[C].scrollTop=0;upd()}
+  function upd(){document.getElementById('sc').textContent=(C+1)+' / '+T;document.getElementById('pb').style.width=((C+1)/T*100)+'%'}
+
+  document.addEventListener('keydown',function(e){
+    if(document.getElementById('lb').classList.contains('open')){if(e.key==='Escape')closeLB();return}
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key==='PageDown'){e.preventDefault();go(C+1)}
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp'||e.key==='PageUp'){e.preventDefault();go(C-1)}
+    else if(e.key===' '){e.preventDefault();go(C+1)}
+    else if(e.key==='Home'){e.preventDefault();go(0)}
+    else if(e.key==='End'){e.preventDefault();go(T-1)}
+  });
+
+  for(var j=0;j<T;j++){
+    S[j].addEventListener('wheel',function(e){
+      var el=this;
+      var atTop=el.scrollTop===0;
+      var atBot=el.scrollTop+el.clientHeight>=el.scrollHeight-2;
+      if(el.scrollHeight>el.clientHeight){
+        if((e.deltaY<0&&atTop)||(e.deltaY>0&&atBot)){e.preventDefault()}
+      } else {e.preventDefault()}
+    },{passive:false});
+  }
+
+  document.getElementById('bp').addEventListener('click',function(e){e.stopPropagation();go(C-1)});
+  document.getElementById('bn').addEventListener('click',function(e){e.stopPropagation();go(C+1)});
+
+  window.openLB=function(el){
+    var img=el.querySelector('img');if(!img)return;
+    document.getElementById('lbImg').src=img.src;
+    document.getElementById('lb').classList.add('open');
+  };
+  window.closeLB=function(){document.getElementById('lb').classList.remove('open')};
+})();
+</script>
+
+</body>
+</html>

@@ -19,6 +19,31 @@ env/
 data/processed/*
 !data/processed/.gitkeep
 
+# ── Data lake (raw / processed audio, manifests, intermediate caches) ──
+data_lake/
+.cache/
+
+# ── Phase 2A / 2B feature banks and large artifacts ────────────────────
+results/phase2a/feature_banks/
+results/phase2a/predictions/
+results/phase2a/artifacts/
+results/phase2a/checkpoints/
+results/phase2b/
+*.npz
+*.npy
+*.pt
+*.pth
+*.ckpt
+*.tar
+*.tar.gz
+*.bin
+
+# ── Compiled report PDFs are large; keep PDF, drop intermediates ───────
+**/*.aux
+**/*.fls
+**/*.fdb_latexmk
+**/*.synctex(busy)
+
 # ── Model artefacts ────────────────────────────────────────────────────
 models/*.pkl
 models/*.joblib
